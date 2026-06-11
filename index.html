@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>BJJ Mastermind</title>
+<link rel="manifest" href="./manifest.json"/>
+<meta name="theme-color" content="#07090e"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="BJJ"/>
+<link rel="apple-touch-icon" href="./icon.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+/* ── RESET & VARS ── */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#07090e;--s1:#0e1118;--s2:#151923;--bd:#ffffff0d;
+  --red:#e74c3c;--gold:#d4a017;--green:#27ae60;--blue:#2980b9;--purple:#8e44ad;
+  --text:#ddd8d0;--muted:#5a6070;--muted2:#3a4050;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+  --nav-h:60px;
+  --header-h:54px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;overflow:hidden}
+
+/* ── APP SHELL ── */
+#app{display:flex;flex-direction:column;height:100%;padding-top:var(--safe-top)}
+.app-header{height:var(--header-h);background:rgba(7,9,14,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0;position:sticky;top:0;z-index:50}
+.app-header-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2.5px}
+.app-header-title span{color:var(--red)}
+.app-header-right{display:flex;align-items:center;gap:8px}
+.belt-chip{display:flex;align-items:center;gap:6px;background:rgba(212,160,23,.12);border:1px solid rgba(212,160,23,.25);border-radius:20px;padding:5px 11px;font-size:10px;font-weight:600;letter-spacing:.8px;color:var(--gold)}
+.belt-pip{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── SCROLL AREA ── */
+.tab-content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.tab-pane{display:none;padding:0 0 calc(var(--nav-h) + var(--safe-bot) + 12px)}
+.tab-pane.active{display:block;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{height:calc(var(--nav-h) + var(--safe-bot));padding-bottom:var(--safe-bot);background:rgba(7,9,14,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--bd);display:flex;align-items:flex-start;padding-top:2px;flex-shrink:0}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;transition:opacity .15s;opacity:.45;border:none;background:none;color:var(--text)}
+.nav-tab.active{opacity:1}
+.nav-tab .ni{font-size:22px;line-height:1}
+.nav-tab .nl{font-size:9px;font-weight:600;letter-spacing:.5px}
+
+/* ── SECTION ── */
+.section{padding:18px 16px 0}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.section-title .stag{font-family:system-ui;font-size:9px;font-weight:600;letter-spacing:1px;padding:2px 7px;border-radius:3px;text-transform:uppercase}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:15px 14px;margin-bottom:10px;position:relative;cursor:pointer;transition:transform .15s,background .15s;-webkit-user-select:none;user-select:none}
+.card:active{transform:scale(.98);background:var(--s2)}
+.card.done{border-color:rgba(39,174,96,.25);background:rgba(39,174,96,.04)}
+.card.focus{border-color:rgba(212,160,23,.3);background:rgba(212,160,23,.05)}
+.card-status{position:absolute;top:12px;right:12px;font-size:13px}
+.card.done .card-status{color:var(--green)}
+.card.focus .card-status{color:var(--gold)}
+.card-icon{font-size:20px;margin-bottom:6px}
+.card-title{font-size:14px;font-weight:600;margin-bottom:3px;line-height:1.3;padding-right:24px}
+.card-sub{font-size:11px;color:var(--muted);line-height:1.4}
+.card-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.card-tag{font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--muted)}
+.card-belt-bar{position:absolute;top:0;left:0;width:3px;height:100%;border-radius:12px 0 0 12px}
+
+/* ── HORIZONTAL CHIPS ── */
+.chips-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;display:flex;gap:8px;scrollbar-width:none}
+.chips-scroll::-webkit-scrollbar{display:none}
+.chip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:.4px;white-space:nowrap;border:1px solid var(--bd);background:var(--s1);cursor:pointer;transition:all .2s;flex-shrink:0}
+.chip.active{background:rgba(231,76,60,.12);border-color:var(--red);color:var(--red)}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 16px 0}
+.stat-card{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:12px 10px;text-align:center}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1}
+.stat-lbl{font-size:9px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-top:2px}
+
+/* ── PROGRESS BAR ── */
+.prog-bar{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .5s}
+
+/* ── TODAY TAB ── */
+.today-hero{padding:20px 16px 16px;border-bottom:1px solid var(--bd)}
+.today-greeting{font-size:13px;color:var(--muted);margin-bottom:2px}
+.today-date{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-bottom:14px}
+.today-focus{background:linear-gradient(135deg,rgba(192,57,43,.12),rgba(192,57,43,.05));border:1px solid rgba(231,76,60,.2);border-radius:12px;padding:14px}
+.today-focus-label{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:4px}
+.today-focus-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.today-focus-items{display:flex;flex-direction:column;gap:4px}
+.today-focus-item{font-size:12px;color:#aaa;display:flex;gap:6px;align-items:baseline}
+.today-focus-item::before{content:'›';color:var(--red);flex-shrink:0}
+
+/* ── DRILL QUICK ── */
+.drill-quick{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-top:10px;display:flex;align-items:center;justify-content:space-between}
+.dq-label{font-size:12px;font-weight:500}
+.dq-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.dq-btn{width:40px;height:40px;border-radius:50%;background:var(--red);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s,background .15s}
+.dq-btn:active{transform:scale(.9)}
+.dq-count{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--red);min-width:32px;text-align:center}
+
+/* ── QUOTE ── */
+.quote-card{margin:0 16px 0;background:linear-gradient(135deg,#13080a,#0d0d14);border:1px solid rgba(212,160,23,.15);border-radius:12px;padding:14px 16px}
+.qtext{font-size:12px;color:#c0bcb5;line-height:1.7;font-style:italic;margin-bottom:5px}
+.qauthor{font-size:10px;color:var(--gold);font-weight:600;letter-spacing:.8px}
+
+/* ── BELT VISUAL ── */
+.belt-visual-wrap{padding:20px 16px 16px;display:flex;align-items:center;gap:16px}
+.belt-bar-long{height:14px;border-radius:6px;flex:1;position:relative;overflow:visible}
+.belt-stripe{position:absolute;right:0;top:0;width:13px;height:14px;background:var(--gold);transition:opacity .3s}
+.belt-stripe.off{opacity:0}
+.belt-stripe:nth-child(2){right:15px}
+.belt-stripe:nth-child(3){right:30px}
+.belt-stripe:nth-child(4){right:45px}
+.belt-info{}
+.belt-name-big{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px}
+.belt-since{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ── REQUIREMENTS ── */
+.req-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer}
+.req-item:last-child{border-bottom:none}
+.req-check{width:20px;height:20px;border-radius:5px;border:1px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s}
+.req-item.ok .req-check{background:rgba(39,174,96,.2);border-color:var(--green);color:var(--green)}
+.req-text{font-size:12.5px;color:#aaa;line-height:1.4}
+.req-item.ok .req-text{color:var(--muted);text-decoration:line-through}
+
+/* ── GAME PLAN CARDS ── */
+.plan-card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:10px;cursor:pointer;transition:transform .15s;position:relative}
+.plan-card:active{transform:scale(.98)}
+.pc-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.pc-icon{font-size:22px;margin-bottom:8px}
+.pc-name{font-size:14px;font-weight:600;margin-bottom:3px}
+.pc-sub{font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:10px}
+.pc-meta{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted)}
+
+/* ── PLAN FLOW MOBILE ── */
+.plan-flow{padding:0 16px}
+.pf-step{display:flex;gap:12px;padding:10px 0}
+.pf-line-wrap{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0}
+.pf-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.pf-connector{width:2px;flex:1;min-height:20px;background:rgba(255,255,255,.08);margin:4px 0}
+.pf-content{flex:1;padding-bottom:4px}
+.pf-type{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.pf-label{font-size:13px;font-weight:600;margin-bottom:2px}
+.pf-node-ref{font-size:10px;color:var(--muted)}
+.pf-status{font-size:9px;font-weight:600;margin-top:3px}
+.pf-branch-label{font-size:10px;color:var(--muted);font-style:italic;margin-bottom:6px;margin-left:40px}
+
+/* ── BOTTOM SHEET ── */
+#sheetOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:flex-end}
+#sheetOverlay.open{display:flex}
+#sheet{background:#0e1118;border-radius:18px 18px 0 0;width:100%;max-height:85vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(20px + var(--safe-bot));animation:slideUp .28s cubic-bezier(.34,1.1,.64,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:12px auto 0}
+.sheet-body{padding:16px 18px}
+.sheet-belt-tag{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.sheet-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;margin-bottom:2px;line-height:1.1}
+.sheet-chapter{font-size:11px;color:var(--muted);margin-bottom:12px}
+.sheet-desc{font-size:12.5px;color:#aaa;line-height:1.7;border-left:2px solid rgba(255,255,255,.08);padding-left:11px;margin-bottom:18px}
+.sheet-section-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.checkpoint{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer}
+.checkpoint:last-child{border-bottom:none}
+.cp-check{width:22px;height:22px;border-radius:6px;border:1px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s;margin-top:1px}
+.checkpoint.checked .cp-check{background:rgba(39,174,96,.2);border-color:var(--green);color:var(--green)}
+.cp-text{font-size:12.5px;color:#aaa;line-height:1.5}
+.checkpoint.checked .cp-text{color:var(--muted);text-decoration:line-through}
+.checkpoint.locked-cp{opacity:.4;pointer-events:none}
+.drill-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid rgba(255,255,255,.04);margin-top:6px}
+.drill-label{font-size:13px;font-weight:500}
+.drill-controls{display:flex;align-items:center;gap:14px}
+.drill-ctrl-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--bd);background:transparent;color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.drill-ctrl-btn:active{background:var(--s2);transform:scale(.9)}
+.drill-num{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--purple);min-width:28px;text-align:center}
+.note-field{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;padding:10px 12px;resize:none;min-height:70px;line-height:1.6;margin-top:10px}
+.note-field:focus{outline:none;border-color:rgba(255,255,255,.12)}
+.note-field::placeholder{color:var(--muted)}
+.sheet-action{width:100%;padding:14px;border-radius:10px;border:none;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;margin-top:14px;transition:all .2s}
+.sheet-action.can{background:var(--red);color:#fff}
+.sheet-action.done-btn{background:rgba(39,174,96,.12);color:var(--green);border:1px solid rgba(39,174,96,.3)}
+.sheet-action:active{transform:scale(.98)}
+.prog-steps{display:flex;gap:4px;margin-bottom:16px}
+.prog-step{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.06)}
+.prog-step.filled{background:var(--gold)}
+
+/* ── LOGIC CARD ── */
+.logic-item{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:9px;padding:12px 14px;margin-bottom:8px}
+.logic-if{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.logic-trigger{font-size:12.5px;font-weight:500;margin-bottom:5px;color:#bbb}
+.logic-then{font-size:9px;font-weight:600;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.logic-resp{font-size:11.5px;color:#888;line-height:1.5}
+
+/* ── INSTALL BANNER ── */
+#installBanner{position:fixed;bottom:calc(var(--nav-h) + var(--safe-bot) + 12px);left:12px;right:12px;background:#0e1118;border:1px solid rgba(212,160,23,.3);border-radius:12px;padding:14px;z-index:200;display:none;animation:fadeUp .3s ease}
+.install-text{font-size:12px;color:#aaa;line-height:1.55;margin-bottom:10px}
+.install-steps{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.install-step{font-size:11.5px;color:var(--text);display:flex;gap:7px;align-items:flex-start}
+.install-step-num{background:var(--red);color:#fff;width:18px;height:18px;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.install-close{width:100%;padding:9px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid var(--bd);color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-icon{font-size:38px;margin-bottom:12px;opacity:.4}
+.empty-text{font-size:13px;line-height:1.6}
+.big-btn{width:100%;padding:14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;margin-top:12px;transition:all .2s}
+.big-btn:active{transform:scale(.98);background:#c0392b}
+.divider{height:1px;background:var(--bd);margin:16px 0}
+.row-between{display:flex;align-items:center;justify-content:space-between}
+.text-muted{font-size:11px;color:var(--muted)}
+.text-gold{color:var(--gold)}
+.text-green{color:var(--green)}
+.text-red{color:var(--red)}
+::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-header-title">BJJ <span>MASTERMIND</span></div>
+    <div class="app-header-right">
+      <div class="belt-chip">
+        <div class="belt-pip" id="headerBeltPip" style="background:#d0d0d0"></div>
+        <span id="headerBeltLabel">BRANCA</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- TAB CONTENT -->
+  <div class="tab-content" id="tabContent">
+
+    <!-- ─── TAB HOJE ─── -->
+    <div class="tab-pane active" id="tab-hoje">
+      <div class="today-hero">
+        <div class="today-greeting" id="todayGreeting"></div>
+        <div class="today-date" id="todayDate"></div>
+        <div class="today-focus" id="todayFocusCard"></div>
+        <div class="drill-quick" id="drillQuick">
+          <div>
+            <div class="dq-label">Sessão de Drill</div>
+            <div class="dq-sub">Registrar treino de hoje</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="dq-count" id="todayDrillCount">0</div>
+            <button class="dq-btn" onclick="addTodayDrill()">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-val text-green" id="statDone">0</div>
+          <div class="stat-lbl">Dominadas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val text-gold" id="statFocus">0</div>
+          <div class="stat-lbl">Em Foco</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--purple)" id="statDrills">0</div>
+          <div class="stat-lbl">Drills</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Técnicas em Foco ★</div>
+        <div id="focusNodesList"></div>
+      </div>
+      <div style="padding:16px 16px 0">
+        <div class="quote-card">
+          <div class="qtext" id="dailyQuote"></div>
+          <div class="qauthor">— Saulo Ribeiro / John Danaher</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── TAB TÉCNICAS ─── -->
+    <div class="tab-pane" id="tab-tecnicas">
+      <div class="chips-scroll" id="phaseChips"></div>
+      <div style="padding:0 16px;margin-bottom:8px" class="row-between">
+        <div class="text-muted" id="phaseNodeCount"></div>
+        <div class="text-muted" id="phaseProgress"></div>
+      </div>
+      <div style="padding:0 16px" id="nodeList"></div>
+    </div>
+
+    <!-- ─── TAB PLANO ─── -->
+    <div class="tab-pane" id="tab-plano">
+      <div class="section">
+        <div class="section-title">Plano de Jogo Ativo</div>
+        <div id="activePlanArea"></div>
+      </div>
+      <div class="section">
+        <div class="section-title">Planos Prontos</div>
+        <div id="planTemplatesList"></div>
+      </div>
+    </div>
+
+    <!-- ─── TAB PERFIL ─── -->
+    <div class="tab-pane" id="tab-perfil">
+      <div class="belt-visual-wrap">
+        <div style="flex:1">
+          <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Faixa Atual</div>
+          <div class="belt-bar-long" id="profileBeltBar" style="background:#d0d0d0">
+            <div class="belt-stripe" id="stripe0"></div>
+            <div class="belt-stripe" id="stripe1"></div>
+            <div class="belt-stripe" id="stripe2"></div>
+            <div class="belt-stripe" id="stripe3"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <span style="font-size:10px;color:var(--muted)">Graus:</span>
+            <div style="display:flex;gap:5px" id="stripeControls"></div>
+          </div>
+        </div>
+        <div class="belt-info">
+          <div class="belt-name-big" id="profileBeltName">BRANCA</div>
+          <div class="belt-since" id="profileBeltSince"></div>
+        </div>
+      </div>
+      <div style="padding:0 16px">
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <input type="date" id="beltStartDate" placeholder="Data de início"
+            style="flex:1;background:var(--s1);border:1px solid var(--bd);color:var(--text);padding:10px 12px;border-radius:8px;font-family:inherit;font-size:13px"
+            onchange="saveBeltDate()"/>
+          <select id="beltSelect" onchange="saveBeltLevel()"
+            style="background:var(--s1);border:1px solid var(--bd);color:var(--text);padding:10px 12px;border-radius:8px;font-family:inherit;font-size:13px">
+            <option value="white">Branca</option>
+            <option value="blue">Azul</option>
+            <option value="purple">Roxa</option>
+            <option value="brown">Marrom</option>
+            <option value="black">Preta</option>
+          </select>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Requisitos — Faixa Azul</div>
+        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:0 14px" id="reqList"></div>
+      </div>
+      <div class="section" style="padding-bottom:8px">
+        <div class="section-title">Notas do Professor</div>
+        <div style="padding:0">
+          <textarea class="note-field" id="profNotesField" rows="5"
+            placeholder="Observações do seu professor, ajustes específicos, metas de treino..."
+            oninput="saveProfNotes()"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active" id="navHoje" onclick="switchTab('hoje')">
+      <span class="ni">🏠</span><span class="nl">HOJE</span>
+    </button>
+    <button class="nav-tab" id="navTecnicas" onclick="switchTab('tecnicas')">
+      <span class="ni">🥋</span><span class="nl">TÉCNICAS</span>
+    </button>
+    <button class="nav-tab" id="navPlano" onclick="switchTab('plano')">
+      <span class="ni">🗺️</span><span class="nl">PLANO</span>
+    </button>
+    <button class="nav-tab" id="navPerfil" onclick="switchTab('perfil')">
+      <span class="ni">👤</span><span class="nl">PERFIL</span>
+    </button>
+  </nav>
+</div>
+
+<!-- BOTTOM SHEET -->
+<div id="sheetOverlay" onclick="handleSheetOverlay(event)">
+  <div id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+
+<!-- INSTALL BANNER -->
+<div id="installBanner">
+  <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--gold);text-transform:uppercase;margin-bottom:8px">📲 Instalar como App</div>
+  <div class="install-steps">
+    <div class="install-step"><div class="install-step-num">1</div><span>No Safari, toque no botão de Compartilhar (quadrado com seta ↑)</span></div>
+    <div class="install-step"><div class="install-step-num">2</div><span>Role para baixo e toque em "Adicionar à Tela de Início"</span></div>
+    <div class="install-step"><div class="install-step-num">3</div><span>Toque em "Adicionar" — o ícone aparecerá na sua tela inicial</span></div>
+  </div>
+  <button class="install-close" onclick="dismissInstall()">Entendido ✓</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════════════════
+const BELT_COLORS = {foundation:'#888',white:'#c8c8c8',blue:'#2980b9',purple:'#8e44ad',brown:'#8b5a2b',black:'#555'};
+const BELT_LABELS = {foundation:'Base',white:'Faixa Branca',blue:'Faixa Azul',purple:'Faixa Roxa',brown:'Faixa Marrom',black:'Faixa Preta'};
+const BELT_BG = {white:'#c8c8c8',blue:'#2980b9',purple:'#8e44ad',brown:'#8b5a2b',black:'#333'};
+
+const NODES = [
+  // FOUNDATION
+  {id:'F1',phase:'foundation',belt:'foundation',icon:'📐',title:'Hierarquia Posicional',chapter:'Introdução',desc:'Costas > Monte > Cruzado > Joelho-barriga > Guarda. Todo BJJ é navegação neste mapa. Saber onde você está e para onde ir é a base de toda inteligência tática.',tags:['conceito'],checkpoints:['Nomear as 6 posições em ordem de vantagem','Identificar a posição ativa durante um roll','Explicar por que posição vem antes de finalização','Aplicar como objetivo tático no sparring']},
+  {id:'F2',phase:'foundation',belt:'foundation',icon:'🌉',title:'Bridge — Ponte',chapter:'Movimento Solo',desc:'Elevação explosiva de quadris com os pés plantados. Sem ponte forte, nenhum escape do monte ou das costas funciona.',tags:['movimento'],checkpoints:['20 pontes explosivas com quadril alto','Bridge e roll solo (cada lado)','Manter peak do bridge por 3 segundos','Aplicar como escape em drill com parceiro']},
+  {id:'F3',phase:'foundation',belt:'foundation',icon:'🦐',title:'Shrimping — Fuga de Quadril',chapter:'Movimento Solo',desc:'O movimento mais importante do BJJ. Fuga lateral do quadril para recuperar guarda ou meia guarda. A gramática do jiu-jitsu de baixo.',tags:['movimento'],checkpoints:['Shrimping solo (3 voltas cada lado)','Shrimping em side control (20 reps cada lado)','Combinar bridge + shrimp em sequência','Usar para recuperar guarda em drill posicional']},
+  // SURVIVAL
+  {id:'S1',phase:'survival',belt:'white',icon:'🛡️',title:'Back Survival Posture',chapter:'Cap. 1-0/1-1',desc:'Braços cruzados protegendo o colar, cotovelos descidos. Saulo: "Retorne sempre a esta posição se algo der errado na defesa das costas."',tags:['costas','defesa'],focus:true,checkpoints:['Estabelecer a postura em 2 segundos','Praticar hand fighting — bloquear sem perseguir','Manter com parceiro tentando passar os braços (2 min)','Identificar os 5 erros comuns (cap. 1-3)']},
+  {id:'S3',phase:'survival',belt:'white',icon:'⬇️',title:'The Scoop',chapter:'Cap. 1-2',desc:'Corpo desliza para baixo eliminando ângulo de ataque. "Ao descer o peso, force o oponente para fora da posição sem expor o pescoço."',tags:['costas'],checkpoints:['The Scoop solo — sentir a posição','Contra parceiro em back control com ganchos','Manter com parceiro tentando atacar (2 min)','Identificar quando usar Scoop vs Hand Fighting']},
+  {id:'S4',phase:'survival',belt:'white',icon:'🐢',title:'All-Fours Survival',chapter:'Cap. 2-0/2-2',desc:'Cotovelos nos joelhos, testa no chão, mãos bloqueando o colar. Elimina todos os ângulos de ataque em tartaruga.',tags:['tartaruga'],checkpoints:['All-Fours solo drill (1 min)','Com parceiro em cima (2 min)','Bloquear underhooks e chokes com parceiro ativo','Transicionar para Back Survival']},
+  {id:'S6',phase:'survival',belt:'white',icon:'🏔️',title:'Mount Survival Posture',chapter:'Cap. 3-0/3-1',desc:'Cotovelos descidos, quadril plano. "Antes de pensar em escapar, estabeleça esta posição. Elimina armbar e choke simultaneamente."',tags:['monte','defesa'],focus:true,checkpoints:['Drill solo de sobrevivência (3 min)','Com parceiro passivo (3 min)','Com parceiro ativo (1 min)','Identificar os 3 erros comuns (cap. 3-6)']},
+  {id:'S7',phase:'survival',belt:'white',icon:'📍',title:'Early Posture — Monte',chapter:'Cap. 3-2',desc:'Estabelecer defesa ANTES do adversário se assentar. Antecipação elimina o problema antes de existir.',tags:['monte'],checkpoints:['Identificar o momento de Early Posture','Prevenir high mount (10 reps)','Drill: parceiro tenta montar → você estabelece postura','Aplicar: nunca estar plano na montada']},
+  {id:'S10',phase:'survival',belt:'white',icon:'↔️',title:'Side Control Survival',chapter:'Cap. 4-0',desc:'Bloquear cross-face, bloquear avanço para o monte, criar frames internos. Base para todos os escapes do cruzado.',tags:['cruzado','defesa'],focus:true,checkpoints:['Drill solo (2 min)','Com parceiro passivo (3 min)','Manter ao menos uma frame ativa constantemente','Identificar Kesa Gatame vs cruzado padrão']},
+  {id:'S13',phase:'survival',belt:'white',icon:'🦵',title:'Knee-on-Belly Survival',chapter:'Cap. 5-0/5-1',desc:'"A prevenção é mais inteligente que o escape." Postura de running e bloqueio ativo do joelho antes de ser estabelecido.',tags:['joelho na barriga'],checkpoints:['Solo prevention drill (20 reps)','Prevenir KOB de ser estabelecido','Identificar importância da prevenção','1 min com parceiro tentando KOB']},
+  {id:'S14',phase:'survival',belt:'white',icon:'🏃',title:'Running Survival Posture',chapter:'Cap. 5-4',desc:'A postura de "corrida" para escape de KOB e cruzado. Uma das posições mais versáteis da defesa.',tags:['postura'],checkpoints:['Running Posture solo (20 reps)','Chegar à postura a partir do cruzado','Manter (30s) com parceiro em KOB','Usar como transição para escape']},
+  // ESCAPES
+  {id:'E1',phase:'escapes',belt:'white',icon:'🤸',title:'Mount Elbow Escape',chapter:'Cap. 7-0/7-1',desc:'O escape mais fundamental do monte. Solo drill primeiro (7-0). Cotovelo + quadril — sem ponte, apenas engajamento de quadril.',tags:['monte'],focus:true,checkpoints:['Solo Elbow Escape Drill (30 reps)','Com parceiro passivo (20 reps)','Contra parceiro ativo (baixa resistência)','Em rolling: sair para meia guarda ou guarda']},
+  {id:'E3',phase:'escapes',belt:'blue',icon:'🔃',title:'Side Control Guard Recovery',chapter:'Cap. 8-0/8-1',desc:'"Você não escapa o cruzado; você foge do quadril para o espaço." O escape base do cruzado lateral.',tags:['cruzado'],focus:true,checkpoints:['Solo drills (3 voltas)','Guard Recovery (20 reps)','Contra resistência crescente','Em rolling: recuperar guarda a partir do cruzado']},
+  {id:'E8',phase:'escapes',belt:'blue',icon:'💪',title:'Armbar Escape',chapter:'Cap. 10-0/10-2',desc:'Escape de armbar: drill de movimento solo + escape para passagem de guarda. Erros comuns que causam lesão.',tags:['armbar'],checkpoints:['Armbar Escape Movement Drill (30 reps)','Escape to Guard Pass (15 reps)','Escape to Guard Pass 2 (15 reps)','Em sparring quando armbarado']},
+  {id:'E9',phase:'escapes',belt:'blue',icon:'🔺',title:'Triangle Escape',chapter:'Cap. 11-0',desc:'"A maioria tenta se soltar do triângulo quando a solução é passar a guarda." Timing e postura são tudo.',tags:['triângulo'],checkpoints:['Triangle Escape to Pass (15 reps)','Identificar erros comuns (11-1)','Drill: parceiro fecha triângulo → você escapa','Em rolling quando triangulado']},
+  {id:'E10',phase:'escapes',belt:'blue',icon:'✂️',title:'Guillotine Escape',chapter:'Cap. 12-0/12-1',desc:'Classic Guillotine Escape e Arm-In Guillotine Escape. A arm-in é mais perigosa — requer técnica diferente.',tags:['guilhotina'],checkpoints:['Classic Guillotine Escape (15 reps)','Arm-In Guillotine Escape (15 reps)','Identificar padrão vs arm-in','Em situação de shoot com guilhotina']},
+  // GUARD
+  {id:'G1',phase:'guard',belt:'blue',icon:'🤲',title:'Closed Guard Arm Wrap',chapter:'Cap. 15-0',desc:'A base da guarda fechada. O Arm Wrap é o ponto de entrada para armlock, choke e sweep.',tags:['guarda fechada'],focus:true,checkpoints:['Arm Wrap (20 reps)','Solo Arm Wrap to Straight Armlock drill','Arm Wrap to Straight Armlock (15 reps)','Manter com parceiro tentando posturar']},
+  {id:'G2',phase:'guard',belt:'blue',icon:'💥',title:'Classic Armbar from Guard',chapter:'Cap. 15-6',desc:'O armbar clássico da guarda fechada. Drill combinado armbar → cross choke (15-7) — pense em sistemas.',tags:['armbar','guarda fechada'],checkpoints:['Classic Armbar (20 reps)','Armbar to Cross Choke Drill (15 reps)','Com quebra de postura primeiro','Encadeamento: arm wrap → armbar']},
+  {id:'G3',phase:'guard',belt:'blue',icon:'🔺',title:'Classic Triangle from Guard',chapter:'Cap. 15-9',desc:'Triângulo clássico. Sequência: quebrar postura → controlar braço → ângulo de 90° → comprimir.',tags:['triângulo'],checkpoints:['Classic Triangle (20 reps)','Ângulo de 90° em 100% das tentativas','Encadeamento: triangle → armbar','Em sparring posicional']},
+  {id:'G5',phase:'guard',belt:'blue',icon:'↗️',title:'Overwrap to Back',chapter:'Cap. 15-3/15-4',desc:'"O overwrap fecha o jogo — quando você tem isto, as costas estão disponíveis."',tags:['back take'],checkpoints:['Overwrap (20 reps)','Overwrap to Back (15 reps)','Distinguir arm wrap vs overwrap','Back take de overwrap em sparring']},
+  {id:'G7',phase:'guard',belt:'blue',icon:'🏄',title:'Hip Bump Sweep',chapter:'Cap. 15-10/15-11',desc:'"O hip bump ensina o timing — reação à reação do adversário." Solo drill primeiro.',tags:['sweep'],focus:true,checkpoints:['Solo Hip Bump drill (20 reps)','Com parceiro (20 reps)','Encadeamento: hip bump → kimura','Converter em monte após o sweep']},
+  {id:'G8',phase:'guard',belt:'blue',icon:'🌺',title:'Flower Sweep',chapter:'Cap. 15-12',desc:'Funciona quando o adversário apoia o joelho e abre espaço lateral.',tags:['sweep'],checkpoints:['Flower Sweep (20 reps)','Identificar quando usar vs hip bump','Hip bump → flower sweep (adversário defende)','Em sparring posicional']},
+  {id:'G11',phase:'guard',belt:'blue',icon:'🧱',title:'Guard Pass Defense',chapter:'Cap. 17-1/17-3',desc:'Defesa de passagem por baixo (single/double under) e por cima das pernas. Crítico para retenção de guarda.',tags:['retenção'],checkpoints:['Single Under Defense (20 reps)','Double Under Defense + Sweep (15 reps)','Leg-Squeeze Defense (15 reps)','Over-and-Under Smash Defense (15 reps)']},
+  {id:'OG1',phase:'guard',belt:'blue',icon:'🦋',title:'Butterfly Guard',chapter:'Cap. 18-0/18-2',desc:'Controle e movimento. A borboleta é a transição entre guarda fechada e guardas abertas.',tags:['borboleta'],focus:true,checkpoints:['Control and Distance drill (2 min)','Control and Movement drill (2 min)','Com oponente tentando passar (3 min)','Identificar ângulos de sweep']},
+  {id:'OG2',phase:'guard',belt:'blue',icon:'🌊',title:'Butterfly Sweep + Wing',chapter:'Cap. 18-3/18-4/18-6',desc:'Classic Butterfly Sweep e Wing Sweep — variação quando adversário bloqueia o sweep padrão.',tags:['sweep','borboleta'],checkpoints:['Solo Butterfly Sweep (30 reps)','Classic Butterfly Sweep (20 reps)','Wing Sweep (20 reps)','Drill: clássico → defende → wing']},
+  {id:'OG6',phase:'guard',belt:'blue',icon:'🌀',title:'De La Riva Guard',chapter:'Cap. 21-0',desc:'DLR: gancho externo + controle de manga/pé. Rollover sweep e DLR to Tomoe-Nage sweep.',tags:['DLR','gi'],checkpoints:['DLR Starting Position (2 min drill)','Manter com passagem ativa (3 min)','Rollover Sweep (15 reps)','DLR to Tomoe-Nage Sweep (15 reps)']},
+  {id:'OG9',phase:'guard',belt:'blue',icon:'⚡',title:'Half Guard',chapter:'Cap. 24-0/24-3',desc:'Meia guarda de Saulo: posição ativa, não apenas sobrevivência. Deep control e getting even deeper.',tags:['meia guarda'],focus:true,checkpoints:['Regaining guard (20 reps)','Deep Control (15 reps)','Getting Even Deeper (15 reps)','3 min com oponente tentando passar']},
+  {id:'OG10',phase:'guard',belt:'blue',icon:'🔙',title:'Half Guard Backdoor',chapter:'Cap. 24-5',desc:'Da meia guarda profunda, rolar por baixo para as costas. Uma das entradas mais eficazes para back control.',tags:['back take'],checkpoints:['Backdoor to Back (20 reps)','Identificar quando fazer vs manter HG','Encadeamento: deep control → backdoor','Em sparring posicional']},
+  {id:'OG11',phase:'guard',belt:'blue',icon:'🤼',title:'Half Guard Kimura',chapter:'Cap. 24-6',desc:'"O kimura da meia guarda é a transição mais natural." O adversário entrega o braço tentando melhorar posição.',tags:['kimura','meia guarda'],checkpoints:['Setup de kimura (20 reps)','Distinguir correto vs erros (24-7)','Encadeamento: deep control → kimura OR backdoor','Em sparring: kimura → back take se rolar']},
+  // PASSING
+  {id:'P1',phase:'passing',belt:'purple',icon:'🔓',title:'Grip Breaking — Guarda',chapter:'Cap. 25-0/25-1',desc:'"A passagem começa no grip fight." Blocking collar grip e defeating cross-collar grip.',tags:['grips'],checkpoints:['Blocking Collar Grip (20 reps)','Defeating Cross-Collar Grip (20 reps)','Overhook Guard Escape (15 reps)','Escaping shoulder belt grip (15 reps)']},
+  {id:'P3',phase:'passing',belt:'purple',icon:'🤿',title:'Underhook Pass',chapter:'Cap. 25-9/25-10',desc:'A passagem mais direta de maior percentual. Base de todo jogo de passagem de joelhos.',tags:['underhook'],focus:true,checkpoints:['Classic Opening on Knees (20 reps)','Basic Underhook Pass (20 reps)','Beating the Blocked Hip (15 reps)','Double Underhook Pass (15 reps)']},
+  {id:'P7',phase:'passing',belt:'purple',icon:'✂️',title:'Knee Cross Pass',chapter:'Cap. 26-4/26-6',desc:'A passagem mais versátil do BJJ moderno. Funciona gi e no-gi.',tags:['knee cross'],checkpoints:['Knee Cross Pass (20 reps)','Against Lapel Grip (15 reps)','Angle Change to Knee Pass (15 reps)','Em sparring de guarda aberta']},
+  {id:'P8',phase:'passing',belt:'purple',icon:'🌊',title:'Torreando Pass',chapter:'Cap. 26-7/26-8',desc:'Redirecionar em vez de esmagar — passagem elegante e eficiente.',tags:['torreando'],checkpoints:['Torreando & Approach (20 reps)','Against One Hook (15 reps)','Hip Control Drill (15 reps)','Leg rope → torreando → knee cross (fluxo)']},
+  {id:'P12',phase:'passing',belt:'purple',icon:'💪',title:'Half Guard Passes',chapter:'Cap. 35-1/35-6/35-7',desc:'Flattening (35-1), shin slide (35-6), esgrima (35-7). Saulo dedicou 19 variações à meia guarda.',tags:['meia guarda'],checkpoints:['Flattening the Opponent (20 reps)','Straight Leg Pass (15 reps)','Shin Slide Pass (15 reps)','Esgrima Pass (15 reps)']},
+  // SUBMISSIONS
+  {id:'SB1',phase:'submissions',belt:'brown',icon:'🎯',title:'Bow & Arrow Choke',chapter:'Cap. 36-1',desc:'A finalização mais poderosa das costas no gi. Requer controle total — perna + colar = alavanca impossível.',tags:['costas','gi'],checkpoints:['Setup (20 reps)','Getting the collar (cap. 36-1)','Com e sem a perna como controle','Converter de seat belt para bow & arrow']},
+  {id:'SB3',phase:'submissions',belt:'brown',icon:'🏔️',title:'Americana + Mounted Armbar',chapter:'Cap. 37-1/37-2',desc:'Sistema do monte: a Americana cria abertura para o armbar quando o adversário defende.',tags:['monte'],focus:true,checkpoints:['Americana from Mount (20 reps)','Mounted Armbar (20 reps)','Drill: americana → defende → armbar','Em sparring posicional do monte']},
+  {id:'SB5',phase:'submissions',belt:'brown',icon:'✝️',title:'Mount Collar Chokes',chapter:'Cap. 37-5/37-6/37-8',desc:'Palm up/Palm down, Palm up/Palm up, S-Mount Cross Choke. Alto percentual no gi.',tags:['monte','gi'],checkpoints:['Palm Up/Palm Down (15 reps)','Palm Up/Palm Up (15 reps)','Triangle from Mount (15 reps)','S-Mount Cross Choke (15 reps)']},
+  {id:'SB7',phase:'submissions',belt:'brown',icon:'🌀',title:'Side Control: Kimura + Armbars',chapter:'Cap. 38-1/38-2/38-4',desc:'Kimura do cruzado, Walk-Around Armbar, Spinning Armbar. O kimura é o gateway.',tags:['cruzado'],checkpoints:['Kimura (20 reps)','Walk-Around Armbar (15 reps)','Spinning Armbar (15 reps)','Kimura → defende → armbar (drill)']},
+  {id:'SB10',phase:'submissions',belt:'brown',icon:'⏰',title:'Clock Choke',chapter:'Cap. 39-1',desc:'Da tartaruga. "A tartaruga é uma posição que muitos usam para descansar — o Clock Choke é a punição."',tags:['tartaruga'],checkpoints:['Clock Choke setup (20 reps)','Posição exata para o choke','Aplicar com pressão de quadril','Converter de All-Fours em sparring']},
+  {id:'SB11',phase:'submissions',belt:'brown',icon:'🔗',title:'Brabo Choke — Half Guard Top',chapter:'Cap. 40-1/40-2',desc:'Brabo Choke e transição para Straight Armlock. Quando adversário tem underhook na meia guarda.',tags:['meia guarda','choke'],checkpoints:['Brabo Choke (20 reps)','Brabo to Straight Armlock (15 reps)','Identificar quando Brabo vs Esgrima','Em sparring de half guard top']},
+];
+
+const PHASES = [
+  {id:'all',label:'Todos',color:'#888'},
+  {id:'foundation',label:'Base',color:'#888'},
+  {id:'survival',label:'Sobrevivência',color:'#c8c8c8'},
+  {id:'escapes',label:'Escapes',color:'#2980b9'},
+  {id:'guard',label:'Guarda',color:'#8e44ad'},
+  {id:'passing',label:'Passagem',color:'#8b5a2b'},
+  {id:'submissions',label:'Finalizações',color:'#e74c3c'},
+];
+
+const WEEKLY = [
+  {day:'Dom',rest:true,title:'Descanso',items:['Revisar notas do dashboard','Assistir vídeos de referência','Mobilidade e alongamento']},
+  {day:'Seg',rest:false,title:'Guarda Fechada',items:['Triângulo: 30 reps','Armbar: 30 reps','Hip Bump Sweep: 20 reps','Sparring posicional: 2×5min']},
+  {day:'Ter',rest:false,title:'Escapes',items:['Upa: 40 reps (20 cada lado)','Elbow-Knee: 40 reps','Shrimping solo: 3 voltas','Sparring: escape do monte 2×5min']},
+  {day:'Qua',rest:true,title:'Descanso / Leve',items:['Movimento solo se quiser','Revisar técnicas em foco','Anotar erros do treino anterior']},
+  {day:'Qui',rest:false,title:'Passagem de Guarda',items:['Knee slice: 30 reps','Torreando: 20 reps','Sparring posicional: 2×5min','Rolling: 2×5min']},
+  {day:'Sex',rest:false,title:'Costas + Monte',items:['Seat belt + ganchos: 20 reps','RNC setup: 20 reps','Monte → Americana: 20 reps','Rolling: 3×5min']},
+  {day:'Sáb',rest:false,title:'Jogo Livre',items:['Aquecimento completo','Rolling: 4-5 rounds','Revisar técnicas em ★','Anotar erros no app']},
+];
+
+const QUOTES = [
+  '"Se você pensa, já é tarde. Se é tarde, usa força. Se usa força, cansa. E se cansa, morre." — Saulo Ribeiro',
+  '"Sobrevivência não é sobre escapar submissões — é sobre se posicionar onde o ataque é impossível." — Saulo Ribeiro',
+  '"O BJJ não é sobre ser mais forte. É sobre ter um mapa melhor." — John Danaher',
+  '"Posição antes de finalização. Sempre." — John Danaher',
+  '"Pense em sistemas, não em técnicas isoladas." — John Danaher',
+  '"A guarda é a identidade do jiu-jitsu." — Saulo Ribeiro',
+  '"Você deve sentir o oponente, não pensar. O pensamento chega tarde." — Saulo Ribeiro',
+];
+
+const REQS = [
+  {id:'r1',text:'Escape consistente do monte (Upa + Elbow-Knee)'},
+  {id:'r2',text:'Escape do cruzado com recuperação de guarda'},
+  {id:'r3',text:'Escape das costas (saída pela janela ou roll under)'},
+  {id:'r4',text:'Defesa básica de armbar e estrangulamento'},
+  {id:'r5',text:'Guarda fechada funcional com 2 ataques (triângulo + kimura ou armbar)'},
+  {id:'r6',text:'1 sweep confiável da guarda fechada'},
+  {id:'r7',text:'Meia guarda básica: underhook + sweep ou back take'},
+  {id:'r8',text:'Passagem de guarda confiável (knee slice ou toreando)'},
+  {id:'r9',text:'Manter o monte por 30 segundos em sparring'},
+  {id:'r10',text:'Controle de costas com seat belt + tentativa de RNC'},
+  {id:'r11',text:'Hierarquia posicional aplicada naturalmente no sparring'},
+  {id:'r12',text:'Não perder posição por finalização de baixo percentual'},
+  {id:'r13',text:'Treino consistente (mín. 2-3x/semana) por 1+ ano'},
+];
+
+const PLAN_TEMPLATES = [
+  {id:'butterfly_back',icon:'🦋',name:'Borboleta → Costas',sub:'Butterfly Guard → Back Take → RNC',color:'#2980b9',
+    flow:[
+      {type:'guard',icon:'🦋',label:'Guarda Borboleta',node:'OG1'},
+      {type:'branch',label:'Adversário cai → Sweep',icon:'🌊',subnodes:[
+        {icon:'🌊',label:'Butterfly Sweep',node:'OG2'},
+        {icon:'🏔️',label:'Monte → Armbar',node:'SB3'},
+      ]},
+      {type:'branch',label:'Adversário resiste → Back',icon:'🔙',subnodes:[
+        {icon:'🔙',label:'Backdoor à Meia Guarda',node:'OG9'},
+        {icon:'🚪',label:'Back Take',node:'OG10'},
+        {icon:'🎯',label:'Bow & Arrow',node:'SB1'},
+      ]},
+    ],
+    logic:[
+      {trigger:'Adversário posta mão para frente',response:'Cross Choke (cap. 18-8) — mão postada abre o colar'},
+      {trigger:'Adversário passa → meia guarda',response:'Deep Half → backdoor para costas (cap. 24-5)'},
+    ],
+    priority:['OG1','OG2','OG9','OG10','SB1','SB3'],
+  },
+  {id:'closed_guard',icon:'🤲',name:'Guarda Fechada Clássica',sub:'Arm Wrap → Triângulo / Armbar / Hip Bump',color:'#e74c3c',
+    flow:[
+      {type:'guard',icon:'🤲',label:'Guarda Fechada',node:'G1'},
+      {type:'branch',label:'Braço isolado',icon:'💥',subnodes:[{icon:'💥',label:'Classic Armbar',node:'G2'},{icon:'✋',label:'TAP',node:null}]},
+      {type:'branch',label:'Quebrar postura',icon:'🔺',subnodes:[{icon:'🔺',label:'Triangle Choke',node:'G3'},{icon:'✋',label:'TAP / Armbar',node:null}]},
+      {type:'branch',label:'Adversário posta mão',icon:'🏄',subnodes:[{icon:'🏄',label:'Hip Bump Sweep',node:'G7'},{icon:'🏔️',label:'Monte',node:'SB3'}]},
+    ],
+    logic:[
+      {trigger:'Triângulo bloqueado',response:'Armbar — defesa do triângulo expõe o braço'},
+      {trigger:'Hip bump sweep bloqueado',response:'Kimura — mão postada para bloquear = grip do kimura'},
+    ],
+    priority:['G1','G2','G3','G7','G5','SB3'],
+  },
+  {id:'half_kimura',icon:'⚡',name:'Meia Guarda → Kimura Trap',sub:'Half Guard → Backdoor / Kimura → Costas',color:'#d4a017',
+    flow:[
+      {type:'guard',icon:'⚡',label:'Meia Guarda',node:'OG9'},
+      {type:'branch',label:'Underhook + Deep',icon:'🔙',subnodes:[{icon:'🔙',label:'Backdoor to Back',node:'OG10'},{icon:'🎯',label:'Bow & Arrow',node:'SB1'}]},
+      {type:'branch',label:'Braço disponível',icon:'🤼',subnodes:[{icon:'🤼',label:'Kimura',node:'OG11'},{icon:'🔙',label:'Back Take',node:'OG10'}]},
+    ],
+    logic:[
+      {trigger:'Underhook bloqueado',response:'Kimura setup — bloqueio expõe o pulso'},
+      {trigger:'Kimura defendido (adversário rola)',response:'Back take — rolar para escapar = entrega as costas'},
+    ],
+    priority:['OG9','OG10','OG11','SB1'],
+  },
+  {id:'pressure_pass',icon:'🤿',name:'Jogo de Cima — Underhook',sub:'Underhook Pass → Monte → Finalizações',color:'#8e44ad',
+    flow:[
+      {type:'guard',icon:'🔓',label:'Grip Break + Abrir Guarda',node:'P1'},
+      {type:'branch',label:'Single underhook',icon:'🤿',subnodes:[{icon:'🤿',label:'Underhook Pass',node:'P3'},{icon:'🏔️',label:'Monte',node:'SB3'},{icon:'💪',label:'Americana/Armbar',node:'SB3'}]},
+      {type:'branch',label:'Adversário meia guarda',icon:'💪',subnodes:[{icon:'💪',label:'Half Guard Pass',node:'P12'},{icon:'🔗',label:'Brabo Choke',node:'SB11'}]},
+    ],
+    logic:[
+      {trigger:'Guarda fechada resistente',response:'Double Underhook Pass (25-12) — sem precisar abrir'},
+      {trigger:'Adversário usa DLR',response:'DLR Pass (30-1) — unlock antes de aprofundar'},
+    ],
+    priority:['P1','P3','P7','P8','SB3','SB5','SB7'],
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+const nodeMap = {};
+NODES.forEach(n => nodeMap[n.id] = n);
+let ST = {}; // skill state
+let APP = {}; // app state (belt, prefs, etc.)
+
+function loadState() {
+  try { ST = JSON.parse(localStorage.getItem('bjj_tree_v1') || '{}'); } catch(e){ ST={}; }
+  try { APP = JSON.parse(localStorage.getItem('bjj_app_v1') || '{}'); } catch(e){ APP={}; }
+}
+function saveSkill() { try { localStorage.setItem('bjj_tree_v1', JSON.stringify(ST)); } catch(e){} }
+function saveApp() { try { localStorage.setItem('bjj_app_v1', JSON.stringify(APP)); } catch(e){} }
+
+function isDone(id) { return !!(ST[id] && ST[id].done); }
+function isFocus(id) {
+  const n = nodeMap[id];
+  return !isDone(id) && ((ST[id] && ST[id].focus) || (n && n.focus && !(ST[id] && ST[id].focus === false)));
+}
+function getDrills(id) { return (ST[id] && ST[id].drills) || 0; }
+function getChecks(id) { return (ST[id] && ST[id].checks) || 0; }
+function getNote(id) { return (ST[id] && ST[id].note) || ''; }
+function getNodeStatus(id) {
+  if(isDone(id)) return 'done';
+  if(isFocus(id)) return 'focus';
+  return '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════════
+let currentTab = 'hoje';
+let currentPhase = 'all';
+let currentNodeId = null;
+let currentPlanId = null;
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('nav'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+  document.getElementById('tabContent').scrollTo({top:0});
+  if(tab === 'tecnicas') renderTechniqueList();
+  if(tab === 'perfil') renderPerfil();
+  if(tab === 'plano') renderPlano();
+  if(tab === 'hoje') renderHoje();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HOME TAB
+// ═══════════════════════════════════════════════════════════════════════════
+function renderHoje() {
+  const now = new Date();
+  const h = now.getHours();
+  const greeting = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  document.getElementById('todayGreeting').textContent = greeting;
+  const days = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  document.getElementById('todayDate').textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+  const plan = WEEKLY[now.getDay()];
+  document.getElementById('todayFocusCard').innerHTML = `
+    <div class="today-focus-label">${plan.rest?'Descanso':'Treino de hoje'} — ${plan.day}</div>
+    <div class="today-focus-title">${plan.title}</div>
+    <div class="today-focus-items">${plan.items.map(i=>`<div class="today-focus-item">${i}</div>`).join('')}</div>`;
+  // daily drill
+  const todayKey = now.toISOString().split('T')[0];
+  const todayDrills = (APP.todayDrills && APP.todayDrills.date === todayKey) ? APP.todayDrills.count : 0;
+  document.getElementById('todayDrillCount').textContent = todayDrills;
+  // stats
+  const done = NODES.filter(n => isDone(n.id)).length;
+  const focus = NODES.filter(n => isFocus(n.id)).length;
+  const totalDrills = Object.values(ST).reduce((a,v) => a + (v.drills||0), 0);
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statFocus').textContent = focus;
+  document.getElementById('statDrills').textContent = totalDrills;
+  // focus nodes
+  const focusNodes = NODES.filter(n => isFocus(n.id)).slice(0, 3);
+  const fl = document.getElementById('focusNodesList');
+  if(!focusNodes.length) {
+    fl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">Nenhuma técnica em foco.<br>Abra Técnicas e marque com ★.</div>`;
+  } else {
+    fl.innerHTML = focusNodes.map(n => renderNodeCard(n)).join('');
+  }
+  // quote
+  const qi = now.getDate() % QUOTES.length;
+  const parts = QUOTES[qi].split('" —');
+  document.getElementById('dailyQuote').textContent = '"' + parts[0].replace('"','') + '"';
+  // belt header
+  const belt = APP.belt || 'white';
+  const stripes = APP.stripes || 0;
+  document.getElementById('headerBeltPip').style.background = BELT_BG[belt];
+  document.getElementById('headerBeltLabel').textContent = `${belt.toUpperCase()} ${stripes > 0 ? '·'.repeat(stripes) : ''}`;
+}
+
+function addTodayDrill() {
+  const today = new Date().toISOString().split('T')[0];
+  if(!APP.todayDrills || APP.todayDrills.date !== today) APP.todayDrills = {date:today, count:0};
+  APP.todayDrills.count++;
+  APP.totalDrills = (APP.totalDrills||0) + 1;
+  document.getElementById('todayDrillCount').textContent = APP.todayDrills.count;
+  saveApp();
+  const btn = document.querySelector('.dq-btn');
+  btn.style.transform = 'scale(1.3)';
+  setTimeout(() => btn.style.transform = '', 200);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TECHNIQUE TAB
+// ═══════════════════════════════════════════════════════════════════════════
+function renderPhaseChips() {
+  const el = document.getElementById('phaseChips');
+  el.innerHTML = PHASES.map(p => `
+    <div class="chip ${currentPhase === p.id ? 'active' : ''}" 
+         style="${currentPhase===p.id?'':'border-color:'+p.color+'33;color:'+p.color}"
+         onclick="selectPhase('${p.id}')">${p.label}</div>`).join('');
+}
+
+function selectPhase(id) {
+  currentPhase = id;
+  renderPhaseChips();
+  renderTechniqueList();
+}
+
+function renderNodeCard(node) {
+  const status = getNodeStatus(node.id);
+  const drills = getDrills(node.id);
+  const checks = getChecks(node.id);
+  const total = node.checkpoints ? node.checkpoints.length : 0;
+  const beltColor = BELT_COLORS[node.belt];
+  const pct = total > 0 ? Math.round(checks/total*100) : 0;
+  return `
+    <div class="card ${status}" onclick="openNodeSheet('${node.id}')">
+      <div class="card-belt-bar" style="background:${beltColor}"></div>
+      ${status ? `<div class="card-status">${status==='done'?'✓':'★'}</div>` : ''}
+      <div class="card-icon">${node.icon}</div>
+      <div class="card-title">${node.title}</div>
+      <div class="card-sub">${node.chapter} · ${BELT_LABELS[node.belt]}</div>
+      ${total > 0 ? `<div style="margin-top:8px"><div class="prog-bar" style="margin-bottom:3px"><div class="prog-fill" style="width:${pct}%;background:${beltColor}"></div></div><div style="font-size:9px;color:var(--muted)">${checks}/${total} checkpoints</div></div>` : ''}
+      ${drills > 0 ? `<div style="font-size:10px;color:var(--purple);margin-top:5px">● ${drills} drills registrados</div>` : ''}
+      <div class="card-tags">${(node.tags||[]).map(t=>`<span class="card-tag">${t}</span>`).join('')}</div>
+    </div>`;
+}
+
+function renderTechniqueList() {
+  renderPhaseChips();
+  const filtered = currentPhase === 'all' ? NODES : NODES.filter(n => n.phase === currentPhase);
+  const done = filtered.filter(n => isDone(n.id)).length;
+  document.getElementById('phaseNodeCount').textContent = `${filtered.length} técnicas`;
+  document.getElementById('phaseProgress').textContent = `${done} dominadas`;
+  document.getElementById('nodeList').innerHTML = filtered.map(renderNodeCard).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NODE BOTTOM SHEET
+// ═══════════════════════════════════════════════════════════════════════════
+function openNodeSheet(id) {
+  currentNodeId = id;
+  const n = nodeMap[id];
+  if(!n) return;
+  const done = isDone(id);
+  const checks = getChecks(id);
+  const drills = getDrills(id);
+  const note = getNote(id);
+  const total = n.checkpoints ? n.checkpoints.length : 0;
+  const beltColor = BELT_COLORS[n.belt];
+  const focusState = isFocus(id);
+
+  const progressSteps = total > 0 ? n.checkpoints.map((_,i) =>
+    `<div class="prog-step ${i < checks ? 'filled' : ''}"></div>`).join('') : '';
+
+  const checkpointsHtml = (n.checkpoints||[]).map((cp, i) => {
+    const checked = i < checks;
+    const locked = i > checks;
+    return `<div class="checkpoint ${checked?'checked':''} ${locked?'locked-cp':''}" onclick="toggleCheck('${id}',${i})">
+      <div class="cp-check">${checked?'✓':''}</div>
+      <div class="cp-text">${cp}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('sheetBody').innerHTML = `
+    <div class="prog-steps">${progressSteps}</div>
+    <div class="sheet-belt-tag" style="color:${beltColor}">${BELT_LABELS[n.belt]}</div>
+    <div class="sheet-title">${n.icon} ${n.title}</div>
+    <div class="sheet-chapter">${n.chapter}</div>
+    <div class="sheet-desc">${n.desc}</div>
+    ${checkpointsHtml ? `<div class="sheet-section-label">Checkpoints de Aprendizado</div>${checkpointsHtml}` : ''}
+    <div class="drill-row">
+      <div>
+        <div class="drill-label">Sessões de Drill</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">Registre cada vez que praticar</div>
+      </div>
+      <div class="drill-controls">
+        <button class="drill-ctrl-btn" onclick="addDrill('${id}',-1)">−</button>
+        <div class="drill-num" id="sheetDrillNum">${drills}</div>
+        <button class="drill-ctrl-btn" onclick="addDrill('${id}',1)">+</button>
+      </div>
+    </div>
+    <div class="sheet-section-label" style="margin-top:12px">Notas Pessoais</div>
+    <textarea class="note-field" id="sheetNote" placeholder="Detalhes do treino, correções do professor..."
+      oninput="saveNodeNote('${id}')">${note}</textarea>
+    <button class="sheet-action ${done?'done-btn':'can'}" id="sheetMainBtn" onclick="toggleNodeDone('${id}')">
+      ${done ? '✓ DOMINADO — Toque para resetar' : 'MARCAR COMO DOMINADO'}
+    </button>`;
+
+  document.getElementById('sheetOverlay').classList.add('open');
+}
+
+function handleSheetOverlay(e) {
+  if(e.target === document.getElementById('sheetOverlay')) closeSheet();
+}
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('open');
+  currentNodeId = null;
+  if(currentTab === 'tecnicas') renderTechniqueList();
+  if(currentTab === 'hoje') renderHoje();
+}
+
+function toggleCheck(id, idx) {
+  if(!ST[id]) ST[id] = {};
+  const cur = ST[id].checks || 0;
+  ST[id].checks = (idx === cur) ? cur + 1 : idx;
+  saveSkill();
+  openNodeSheet(id);
+}
+
+function addDrill(id, delta) {
+  if(!ST[id]) ST[id] = {};
+  ST[id].drills = Math.max(0, (ST[id].drills || 0) + delta);
+  saveSkill();
+  const el = document.getElementById('sheetDrillNum');
+  if(el) el.textContent = ST[id].drills;
+  const btn = delta > 0 ? document.querySelector('.drill-ctrl-btn:last-child') : null;
+  if(btn && delta > 0) { btn.style.transform='scale(1.2)'; setTimeout(()=>btn.style.transform='',150); }
+}
+
+function saveNodeNote(id) {
+  if(!ST[id]) ST[id] = {};
+  ST[id].note = document.getElementById('sheetNote')?.value || '';
+  saveSkill();
+}
+
+function toggleNodeDone(id) {
+  if(!ST[id]) ST[id] = {};
+  const wasDone = ST[id].done;
+  ST[id].done = !wasDone;
+  const n = nodeMap[id];
+  if(!wasDone && n) ST[id].checks = (n.checkpoints||[]).length;
+  if(wasDone) ST[id].checks = 0;
+  saveSkill();
+  openNodeSheet(id);
+  if(currentTab === 'hoje') setTimeout(renderHoje, 100);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GAME PLAN TAB
+// ═══════════════════════════════════════════════════════════════════════════
+function renderPlano() {
+  const active = APP.activePlan;
+  const activePlanEl = document.getElementById('activePlanArea');
+  if(active) {
+    const p = PLAN_TEMPLATES.find(t => t.id === active);
+    if(p) {
+      activePlanEl.innerHTML = renderPlanCard(p, true);
+    }
+  } else {
+    activePlanEl.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:8px 0">Nenhum plano ativo. Escolha um abaixo.</div>`;
+  }
+  document.getElementById('planTemplatesList').innerHTML = PLAN_TEMPLATES.map(p => renderPlanCard(p, false)).join('');
+}
+
+function renderPlanCard(p, isActive) {
+  const priority = p.priority || [];
+  const done = priority.filter(id => isDone(id)).length;
+  const pct = priority.length ? Math.round(done/priority.length*100) : 0;
+  return `
+    <div class="plan-card" onclick="openPlanSheet('${p.id}')">
+      <div class="pc-accent" style="background:${p.color}"></div>
+      <div class="pc-icon">${p.icon}</div>
+      <div class="pc-name">${p.name} ${isActive?'<span style="font-size:9px;color:var(--gold);background:rgba(212,160,23,.15);padding:2px 6px;border-radius:3px;margin-left:4px">ATIVO</span>':''}</div>
+      <div class="pc-sub">${p.sub}</div>
+      <div class="prog-bar" style="margin-bottom:6px"><div class="prog-fill" style="width:${pct}%;background:${p.color}"></div></div>
+      <div class="pc-meta"><span>${done}/${priority.length} técnicas dominadas</span><span style="color:${p.color}">${pct}%</span></div>
+    </div>`;
+}
+
+function openPlanSheet(id) {
+  currentPlanId = id;
+  const p = PLAN_TEMPLATES.find(t => t.id === id);
+  if(!p) return;
+  const priority = p.priority || [];
+  const done = priority.filter(i => isDone(i)).length;
+  const toLearn = priority.filter(i => !isDone(i));
+  const isActive = APP.activePlan === id;
+
+  const flowHtml = p.flow.map((step, si) => {
+    const isLast = si === p.flow.length - 1;
+    if(step.type === 'branch') {
+      return `
+        <div style="margin-left:0">
+          <div style="font-size:9px;color:var(--muted);margin:6px 40px 4px;font-style:italic">${step.label}</div>
+          ${step.subnodes.map((sn, ni) => {
+            const ref = sn.node ? nodeMap[sn.node] : null;
+            const status = sn.node ? getNodeStatus(sn.node) : 'none';
+            const statusColor = status==='done'?'#27ae60':status==='focus'?'#d4a017':'#555';
+            return `
+              <div class="pf-step">
+                <div class="pf-line-wrap">
+                  <div class="pf-dot" style="background:${ref?BELT_COLORS[ref.belt]+'22':'rgba(255,255,255,.05)'};border-color:${ref?BELT_COLORS[ref.belt]+'44':'rgba(255,255,255,.08)'}">${sn.icon}</div>
+                  ${ni < step.subnodes.length-1 ? '<div class="pf-connector"></div>' : ''}
+                </div>
+                <div class="pf-content">
+                  <div class="pf-label">${sn.label}</div>
+                  ${ref ? `<div class="pf-node-ref" style="color:${BELT_COLORS[ref.belt]}">${ref.chapter}</div>` : ''}
+                  ${sn.node ? `<div class="pf-status" style="color:${statusColor}">${status==='done'?'✓ Dominado':status==='focus'?'★ Em foco':'A aprender'}</div>` : ''}
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`;
+    } else {
+      const ref = step.node ? nodeMap[step.node] : null;
+      const status = step.node ? getNodeStatus(step.node) : 'none';
+      const statusColor = status==='done'?'#27ae60':status==='focus'?'#d4a017':'#555';
+      const typeLabel = step.type === 'guard' ? 'POSIÇÃO PRIMÁRIA' : step.type === 'finish' ? 'FINALIZAÇÃO' : 'TRANSIÇÃO';
+      return `
+        <div class="pf-step">
+          <div class="pf-line-wrap">
+            <div class="pf-dot" style="background:${ref?BELT_COLORS[ref.belt]+'22':'rgba(255,255,255,.05)'};border-color:${p.color}66;border-width:2px">${step.icon}</div>
+            ${!isLast ? '<div class="pf-connector"></div>' : ''}
+          </div>
+          <div class="pf-content">
+            <div class="pf-type">${typeLabel}</div>
+            <div class="pf-label">${step.label}</div>
+            ${ref ? `<div class="pf-node-ref" style="color:${BELT_COLORS[ref.belt]}">${ref.chapter}</div>` : ''}
+            ${step.node ? `<div class="pf-status" style="color:${statusColor}">${status==='done'?'✓ Dominado':status==='focus'?'★ Em foco':'A aprender'}</div>` : ''}
+          </div>
+        </div>`;
+    }
+  }).join('');
+
+  const logicHtml = p.logic.map(l => `
+    <div class="logic-item">
+      <div class="logic-if">SE o adversário</div>
+      <div class="logic-trigger">${l.trigger}</div>
+      <div class="logic-then">→ ENTÃO</div>
+      <div class="logic-resp">${l.response}</div>
+    </div>`).join('');
+
+  const priorityHtml = toLearn.slice(0,4).map(id => {
+    const n = nodeMap[id];
+    return n ? `<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:#aaa"><span>${n.icon}</span><span>${n.title} <span style="font-size:9px;color:${BELT_COLORS[n.belt]}">${n.chapter}</span></span></div>` : '';
+  }).join('');
+
+  document.getElementById('sheetBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="font-size:28px">${p.icon}</span>
+      <div>
+        <div class="sheet-title" style="font-size:22px">${p.name}</div>
+        <div class="sheet-chapter">${p.sub}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;margin-bottom:16px">
+      <div class="stat-card" style="flex:1;padding:10px"><div class="stat-val" style="color:var(--green)">${done}</div><div class="stat-lbl">Dominadas</div></div>
+      <div class="stat-card" style="flex:1;padding:10px"><div class="stat-val" style="color:var(--red)">${toLearn.length}</div><div class="stat-lbl">A aprender</div></div>
+    </div>
+    <div class="sheet-section-label">Fluxo de Decisão</div>
+    <div class="plan-flow" style="padding:0;margin-bottom:16px">${flowHtml}</div>
+    ${p.logic.length ? `<div class="sheet-section-label">Lógica: Se... Então...</div>${logicHtml}` : ''}
+    ${toLearn.length ? `<div class="sheet-section-label" style="margin-top:14px">Próximas Técnicas a Estudar</div>${priorityHtml}` : ''}
+    <button class="sheet-action ${isActive?'done-btn':'can'}" onclick="toggleActivePlan('${id}')">
+      ${isActive ? '✓ PLANO ATIVO — Remover' : '⚡ DEFINIR COMO PLANO ATIVO'}
+    </button>`;
+
+  document.getElementById('sheetOverlay').classList.add('open');
+}
+
+function toggleActivePlan(id) {
+  APP.activePlan = APP.activePlan === id ? null : id;
+  saveApp();
+  openPlanSheet(id);
+  if(currentTab === 'plano') setTimeout(renderPlano, 100);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROFILE TAB
+// ═══════════════════════════════════════════════════════════════════════════
+const BELT_BG_COLORS = {white:'#c8c8c8',blue:'#2980b9',purple:'#8e44ad',brown:'#8b5a2b',black:'#333'};
+
+function renderPerfil() {
+  const belt = APP.belt || 'white';
+  const stripes = APP.stripes || 0;
+  const startDate = APP.beltStart || '';
+  // Belt bar
+  document.getElementById('profileBeltBar').style.background = BELT_BG_COLORS[belt];
+  document.getElementById('profileBeltName').textContent = belt.toUpperCase();
+  document.getElementById('profileBeltName').style.color = BELT_COLORS[belt];
+  // Stripes
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById('stripe'+i);
+    el.classList.toggle('off', i >= stripes);
+  });
+  const sc = document.getElementById('stripeControls');
+  sc.innerHTML = [0,1,2,3,4].map(i => `
+    <div onclick="setStripes(${i+1})" style="width:22px;height:8px;border-radius:2px;cursor:pointer;transition:all .2s;
+      background:${i < stripes ? 'var(--gold)' : 'rgba(255,255,255,.1)'};
+      border:1px solid ${i < stripes ? 'var(--gold)' : 'rgba(255,255,255,.12)'}"></div>`).join('');
+  // Since
+  if(startDate) {
+    const d = new Date(startDate);
+    const months = Math.floor((Date.now() - d) / (1000*60*60*24*30.5));
+    document.getElementById('profileBeltSince').textContent =
+      `desde ${d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})} · ${months < 12 ? months + ' meses' : Math.floor(months/12) + ' ano(s)'}`;
+    document.getElementById('beltStartDate').value = startDate;
+  } else {
+    document.getElementById('profileBeltSince').textContent = 'configure a data de início';
+  }
+  document.getElementById('beltSelect').value = belt;
+  // Reqs
+  const reqList = document.getElementById('reqList');
+  reqList.innerHTML = REQS.map(r => {
+    const ok = APP.reqs && APP.reqs[r.id];
+    return `<div class="req-item ${ok?'ok':''}" onclick="toggleReq('${r.id}')">
+      <div class="req-check">${ok?'✓':''}</div>
+      <div class="req-text">${r.text}</div>
+    </div>`;
+  }).join('');
+  // Notes
+  document.getElementById('profNotesField').value = APP.profNotes || '';
+}
+
+function setStripes(n) {
+  APP.stripes = (APP.stripes === n) ? n-1 : n;
+  saveApp();
+  renderPerfil();
+  renderHoje();
+}
+
+function saveBeltDate() {
+  APP.beltStart = document.getElementById('beltStartDate').value;
+  saveApp();
+  renderPerfil();
+}
+
+function saveBeltLevel() {
+  APP.belt = document.getElementById('beltSelect').value;
+  saveApp();
+  renderPerfil();
+  renderHoje();
+}
+
+function toggleReq(id) {
+  if(!APP.reqs) APP.reqs = {};
+  APP.reqs[id] = !APP.reqs[id];
+  saveApp();
+  renderPerfil();
+}
+
+function saveProfNotes() {
+  APP.profNotes = document.getElementById('profNotesField')?.value || '';
+  saveApp();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INSTALL BANNER (iOS)
+// ═══════════════════════════════════════════════════════════════════════════
+function checkInstallBanner() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone;
+  const dismissed = localStorage.getItem('bjj_install_dismissed');
+  if(isIOS && !isStandalone && !dismissed) {
+    setTimeout(() => { document.getElementById('installBanner').style.display = 'block'; }, 3000);
+  }
+}
+function dismissInstall() {
+  localStorage.setItem('bjj_install_dismissed', '1');
+  document.getElementById('installBanner').style.display = 'none';
+}
+
+// ── PWA Install prompt (Android) ──
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.createElement('button');
+  btn.style.cssText = 'position:fixed;bottom:calc(var(--nav-h) + var(--safe-bot) + 12px);right:16px;background:var(--red);color:#fff;border:none;border-radius:20px;padding:10px 16px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;z-index:200;box-shadow:0 4px 16px rgba(231,76,60,.4)';
+  btn.textContent = '📲 Instalar App';
+  btn.onclick = () => { deferredPrompt.prompt(); btn.remove(); };
+  document.body.appendChild(btn);
+});
+
+// ── Service Worker ──
+if('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+loadState();
+renderHoje();
+renderPhaseChips();
+checkInstallBanner();
+</script>
+</body>
+</html>

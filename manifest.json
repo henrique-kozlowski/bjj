@@ -1,0 +1,17 @@
+{
+  "name": "BJJ Mastermind",
+  "short_name": "BJJ",
+  "description": "App de aprendizado de Jiu-Jitsu — Skill Tree, Técnicas e Plano de Jogo",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#07090e",
+  "theme_color": "#07090e",
+  "lang": "pt-BR",
+  "categories": ["sports", "education"],
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

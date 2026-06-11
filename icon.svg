@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#07090e"/>
+  <!-- Gi collar shape -->
+  <path d="M256 72 L176 160 L176 380 L256 420 L336 380 L336 160 Z" fill="none" stroke="#c0392b" stroke-width="18" stroke-linejoin="round"/>
+  <!-- Lapel lines -->
+  <path d="M256 72 L256 220" stroke="#c0392b" stroke-width="18" stroke-linecap="round"/>
+  <path d="M256 140 L196 190" stroke="#c0392b" stroke-width="14" stroke-linecap="round"/>
+  <path d="M256 140 L316 190" stroke="#c0392b" stroke-width="14" stroke-linecap="round"/>
+  <!-- Belt -->
+  <rect x="152" y="306" width="208" height="22" rx="4" fill="#d4a017"/>
+  <!-- Belt knot -->
+  <rect x="238" y="296" width="36" height="42" rx="4" fill="#b8890e"/>
+</svg>
