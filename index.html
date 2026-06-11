@@ -186,6 +186,29 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-
 .prog-step{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.06)}
 .prog-step.filled{background:var(--gold)}
 
+/* ── STEPPER ── */
+.stepper{display:flex;flex-direction:column;margin-bottom:14px}
+.st-item{display:flex;gap:11px}
+.st-left{display:flex;flex-direction:column;align-items:center;width:26px;flex-shrink:0}
+.st-circle{width:26px;height:26px;border-radius:50%;background:rgba(231,76,60,.14);border:1px solid rgba(231,76,60,.35);color:var(--red);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.st-line{width:2px;flex:1;min-height:10px;background:rgba(255,255,255,.06);margin:3px 0}
+.st-right{flex:1;padding-bottom:13px}
+.st-title{font-size:12px;font-weight:600;margin-bottom:3px;color:var(--text)}
+.st-desc{font-size:12px;color:#999;line-height:1.6}
+.key-box{background:rgba(39,174,96,.06);border:1px solid rgba(39,174,96,.18);border-radius:9px;padding:11px 13px;margin-bottom:10px}
+.key-box-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);margin-bottom:6px}
+.key-box-item{font-size:12px;color:#aaa;line-height:1.55;padding:2px 0;display:flex;gap:7px;align-items:baseline}
+.key-box-item::before{content:'●';color:var(--green);font-size:6px;margin-top:5px;flex-shrink:0}
+.err-box{background:rgba(231,76,60,.05);border:1px solid rgba(231,76,60,.15);border-radius:9px;padding:11px 13px;margin-bottom:10px}
+.err-box-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+.err-box-item{font-size:12px;color:#aaa;line-height:1.55;padding:2px 0;display:flex;gap:7px;align-items:baseline}
+.err-box-item::before{content:'✕';color:var(--red);font-size:9px;flex-shrink:0;font-weight:700}
+.yt-btn{display:flex;align-items:center;gap:9px;width:100%;padding:11px 14px;border-radius:9px;border:1px solid rgba(255,80,80,.2);background:rgba(255,80,80,.06);color:#ff7070;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:all .2s;text-decoration:none}
+.yt-btn:active{background:rgba(255,80,80,.12);transform:scale(.98)}
+.sheet-tabs{display:flex;gap:0;background:rgba(255,255,255,.04);border-radius:8px;padding:3px;margin-bottom:14px}
+.sheet-tab{flex:1;padding:7px;border-radius:6px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;color:var(--muted);transition:all .2s}
+.sheet-tab.active{background:var(--s2);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+
 /* ── LOGIC CARD ── */
 .logic-item{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:9px;padding:12px 14px;margin-bottom:8px}
 .logic-if{font-size:9px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
@@ -548,7 +571,201 @@ const PLAN_TEMPLATES = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
-// STATE
+// STEP-BY-STEP INSTRUCTIONS (based on Jiu-Jitsu University — Saulo Ribeiro)
+// ═══════════════════════════════════════════════════════════════════════════
+const STEPS = {
+F2:{yt:'bridge and roll BJJ mount escape tutorial',
+steps:[{t:'Posição inicial',d:'Deite de costas, joelhos dobrados (~45°), pés plantados próximos ao quadril. Braços ao lado do corpo, palmas para baixo.'},{t:'Carregamento',d:'Pressione os pés no chão e ative os glúteos antes de iniciar. Sinta a tensão se construindo.'},{t:'Explosão',d:'Empurre os pés e eleve os quadris em um único movimento explosivo. O peso fica nos ombros e nos pés.'},{t:'Peak',d:'No ponto mais alto, quadris completamente estendidos. Segure 1 segundo para desenvolver controle.'},{t:'Bridge and roll',d:'Para o escape: ao elevar, vire o tronco para o lado do braço controlado, usando o momentum para rolar o adversário.'}],
+keys:['Força vem dos glúteos e pernas, não da lombar','Um único disparo explosivo — não gradual','Pés próximos ao quadril para máxima alavanca'],
+errors:['Elevar lentamente (adversário se adapta)','Pés muito longe (perde potência)','Tentar rolar antes de completar a elevação']},
+
+F3:{yt:'hip escape shrimping BJJ tutorial solo drill',
+steps:[{t:'Posição lateral',d:'Deite de lado, corpo levemente curvado, cotovelo de baixo no chão como suporte.'},{t:'Frame com o cotovelo',d:'Antes de se mover, crie um frame com o cotovelo e o joelho entre você e o adversário.'},{t:'Empurre com o pé',d:'Pressione o pé no chão e empurre o quadril para longe do adversário em movimento lateral.'},{t:'Girar e repetir',d:'Enquanto o quadril se move, gire para o outro lado e repita com o outro pé no chão.'},{t:'Inserir o joelho',d:'Quando houver espaço, insira o joelho entre você e o adversário para iniciar a recuperação de guarda.'}],
+keys:['O movimento é de quadril, não de ombros','Crie o frame ANTES de se mover','Pequenos movimentos frequentes > um grande movimento'],
+errors:['Mover ombros em vez do quadril','Não criar frame antes da guarda','Shrimpar direto para a guarda sem criar espaço']},
+
+S1:{yt:'back survival posture BJJ Saulo Ribeiro tutorial',
+steps:[{t:'Posição base',d:'Deite com o adversário nas suas costas. Queixo para baixo, protegendo o pescoço.'},{t:'Cruzar os antebraços',d:'Cruze os braços sobre o peito, antebraços verticais cobrindo o colar. Mãos seguram seus próprios bíceps.'},{t:'Cotovelos descidos',d:'Pressione os cotovelos em direção ao abdômen — isso cria escudo duplo contra chokes.'},{t:'The Scoop',d:'Pressione o quadril para baixo e deslize o corpo para longe do adversário, retirando o ângulo de ataque.'},{t:'Manter sem perseguir',d:'Nunca persiga os braços do adversário. Cotovelos ficam fixos — deixe as mãos encontrarem o ataque.'}],
+keys:['"Se você pensa, já é tarde" — mantenha a postura ANTES do ataque','Cotovelos descidos eliminam a maioria dos chokes','Reestabeleça a postura imediatamente quando perturbada'],
+errors:['Braços separados (cria espaço para o choke)','Perseguir os braços do adversário com as mãos','Elevar os cotovelos ao tentar defender']},
+
+S3:{yt:'the scoop back defense BJJ Saulo Ribeiro',
+steps:[{t:'Postura de costas estabelecida',d:'Pré-requisito: Back Survival Posture com cotovelos descidos e antebraços cruzados.'},{t:'Deslizar para baixo',d:'Com um movimento firme, deslize o corpo todo para baixo — quadril primeiro — em direção aos pés do adversário.'},{t:'Criar o ângulo',d:'Ao descer, o pescoço sai do alinhamento do choke. O adversário perde o ângulo necessário para finalizar.'},{t:'Pressão dos quadris',d:'Pressione o quadril contra o mat para criar estabilidade e resistir à tração do adversário.'},{t:'Combinar com hand fighting',d:'Mantenha os braços cruzados enquanto executa o Scoop — não deixe cair a guarda do pescoço.'}],
+keys:['O movimento é para baixo, não para o lado','A perda de ângulo é o que neutraliza o choke','Combine com hand fighting — os dois trabalham juntos'],
+errors:['Mover apenas o quadril sem o tronco','Abrir os braços ao executar o Scoop','Fazer o movimento lento (adversário ajusta o ângulo)']},
+
+S4:{yt:'all fours turtle survival BJJ Saulo Ribeiro',
+steps:[{t:'Posição de quatro apoios',d:'Vá para quatro apoios: joelhos e mãos no chão, pés apontando para trás.'},{t:'Cotovelos nos joelhos',d:'Aproxime os cotovelos dos joelhos, reduzindo o espaço de acesso lateral.'},{t:'Testa baixa',d:'Baixe a testa em direção ao chão entre as mãos. Isso fecha os ângulos de choke.'},{t:'Mãos no colar',d:'Com as mãos, bloqueie o colar nos dois lados — previne o grip de colar do adversário.'},{t:'Resistir ao roll',d:'Quando o adversário tentar te rolar, distribua o peso para resistir. Reestabeleça se perturbado.'}],
+keys:['Quanto menor o espaço entre cotovelos e joelhos, melhor','Testa baixa fecha os ângulos de estrangulamento','Esta posição é temporária — tenha sempre um plano de saída'],
+errors:['Espaço entre cotovelos e joelhos (abre para underhooks)','Cabeça levantada (expõe o pescoço)','Permanecer passivo sem plano de saída']},
+
+S6:{yt:'mount survival posture BJJ Saulo Ribeiro elbow escape',
+steps:[{t:'Resposta imediata',d:'Ao ser montado, puxe os cotovelos imediatamente para os lados do tronco antes que o adversário se assentar completamente.'},{t:'Quadril plano',d:'Mantenha o quadril no chão — nunca eleve sem intenção de escapar com bridge and roll.'},{t:'Queixo no peito',d:'Puxe o queixo em direção ao peito, protegendo o pescoço de chokes.'},{t:'Mãos neutras',d:'Mantenha as mãos próximas ao peito, sem estender os braços (convite para armbar).'},{t:'Paciência ativa',d:'Observe o movimento do adversário. O escape vem da reação ao erro dele — não force antes da hora.'}],
+keys:['Cotovelos ao tronco são a prioridade #1 ao ser montado','Quadril baixo = adversário não consegue estabelecer high mount','Paciência ativa — sobrevivência é intencional, não passiva'],
+errors:['Empurrar o adversário com os braços esticados (cria armbar)','Quadril elevado (facilita high mount e S-mount)','Tentar escapar imediatamente sem postura estabelecida']},
+
+S10:{yt:'side control survival BJJ frame defense escape',
+steps:[{t:'Frame interno imediato',d:'Ao ser cruzado, coloque o antebraço de baixo no pescoço do adversário como frame — ANTES de qualquer outra coisa.'},{t:'Bloquear cross-face',d:'Com o outro braço, pressione o ombro/rosto do adversário para prevenir o cross-face.'},{t:'Quadril baixo',d:'Mantenha o quadril no chão. Elevar sem intenção dá ao adversário espaço para o knee-on-belly.'},{t:'Joelhos como proteção',d:'Mantenha os joelhos dobrados em direção ao peito — previne o avanço ao monte.'},{t:'Respirar e criar espaço',d:'Sob pressão, respire e procure o momento de criar espaço para o shrimp. Não force.'}],
+keys:['Frame interno é a prioridade #1 — sem ele adversário avança ao monte','Nunca vire de costas — entrega o back imediatamente','A defesa é sempre EM DIREÇÃO ao adversário, não para longe'],
+errors:['Virar de costas ao tentar escapar (entrega o back)','Braços acima da cabeça (perde controle total)','Elevar quadril sem frame estabelecido']},
+
+S13:{yt:'knee on belly survival escape BJJ running posture',
+steps:[{t:'Prevenir antes de estabelecer',d:'Quando sentir o adversário se movendo para KOB, gire os quadris imediatamente para o lado.'},{t:'Running posture',d:'Se o KOB for estabelecido: gire para a posição de corrida (de lado, braço de cima apontando para frente).'},{t:'Bloquear o joelho',d:'Com a mão de cima, bloqueie ou desvie o joelho do adversário antes de ele apoiar o peso.'},{t:'Criar pressão lateral',d:'Empurre o joelho do adversário com a mão enquanto usa os quadris para criar distância.'},{t:'Continuar para escape',d:'Da running posture, continue para o escape completo via shrimping + recuperação de guarda.'}],
+keys:['"A prevenção é mais inteligente que o escape" — Saulo Ribeiro','Running posture é a base de todos os escapes de KOB e cruzado','Bloqueie o joelho ANTES de ele apoiar o peso'],
+errors:['Ficar plano (KOB se torna mais pesado)','Tentar empurrar o adversário com força','Não transicionar da sobrevivência para o escape']},
+
+S14:{yt:'running escape posture BJJ side control knee on belly',
+steps:[{t:'Partir do cruzado ou KOB',d:'Da posição de cruzado ou KOB, inicie a rotação dos quadris para o lado.'},{t:'Corpo em posição de corrida',d:'Vire para ficar de lado: braço de baixo estendido, braço de cima apontando para frente como um corredor.'},{t:'Joelhos dobrados',d:'Mantenha os joelhos dobrados e próximos ao peito — posição compacta e preparada.'},{t:'Quadril como pivot',d:'O quadril é o centro — todo o movimento parte de lá. Pernas e tronco seguem o quadril.'},{t:'Transicionar',d:'Da running posture: shrimpe para recuperar guarda, escape do KOB ou crie espaço para se levantar.'}],
+keys:['Esta postura é um ponto de transição, não uma posição estática','O braço dianteiro cria o frame que protege o espaço','Quadril baixo ao chão — não sente nem levanta'],
+errors:['Braço de baixo dobrado (perde o frame)','Quadril elevado (adversário passa para o monte)','Ficar na postura sem transicionar para o escape']},
+
+E1:{yt:'mount elbow knee escape BJJ Saulo Ribeiro tutorial',
+steps:[{t:'Estabelecer a postura',d:'Cotovelos ao tronco, quadril baixo. Identifique se está em monte baixo ou alto — isso determina o escape.'},{t:'Criar espaço lateral',d:'Vire levemente para um lado, criando um pequeno espaço entre o cotovelo e o quadril do adversário.'},{t:'Inserir o cotovelo',d:'Deslize o cotovelo para dentro desse espaço, apontando o cotovelo em direção ao joelho do adversário.'},{t:'Shrimp simultâneo',d:'Ao inserir o cotovelo, execute o shrimp lateral — quadril e cotovelo movem JUNTOS, não em sequência.'},{t:'Criar meia guarda',d:'Continue o shrimp até capturar a perna do adversário entre as suas (meia guarda).'},{t:'Recuperar guarda',d:'Da meia guarda, use o underhook para completar a recuperação de guarda completa.'}],
+keys:['Cotovelo e quadril se movem JUNTOS — não um depois do outro','O movimento é horizontal (lateral), não vertical','A meia guarda é o passo intermediário, não o destino final'],
+errors:['Usar força para empurrar o adversário (cansa, não funciona)','Mover apenas o cotovelo sem o quadril','Tentar guarda diretamente sem a meia guarda como etapa']},
+
+E3:{yt:'side control escape guard recovery shrimping BJJ tutorial',
+steps:[{t:'Frame interno',d:'Coloque o antebraço de baixo no pescoço do adversário e a mão no quadril — frame duplo.'},{t:'Criar espaço com o frame',d:'Use os frames para criar um pequeno espaço entre você e o adversário.'},{t:'Shrimp em direção ao adversário',d:'Execute o shrimp NEM PARA FRENTE NEM PARA LONGE — EM DIREÇÃO ao adversário. Contra-intuitivo mas correto.'},{t:'Joelho como cunha',d:'Insira o joelho no espaço criado, posicionando-o entre você e o adversário como uma cunha.'},{t:'Frame com joelho + cotovelo',d:'Use joelho e cotovelo simultaneamente como frames para manter o espaço aberto.'},{t:'Recuperar guarda',d:'Continue o shrimp com o joelho como guia até colocar o pé no quadril e estabelecer guarda completa.'}],
+keys:['Shrimpar EM DIREÇÃO ao adversário — contra-intuitivo mas correto','O joelho entra ANTES de tentar a guarda','Mantenha o frame ativo durante todo o processo'],
+errors:['Shrimpar para longe (perde o espaço)','Tentar a guarda sem o joelho estabelecido','Perder o frame antes de completar o escape']},
+
+E8:{yt:'armbar escape BJJ guard pass tutorial',
+steps:[{t:'Reconhecer e dobrar',d:'Adversário tem o armbar — dobre o cotovelo IMEDIATAMENTE, trazendo a mão para o peito. Esta é a prioridade #1.'},{t:'Rotação do polegar',d:'Dobre o cotovelo e gire o polegar para baixo (supinação). Isso reduz a eficácia da extensão.'},{t:'Sair pelo lado',d:'Enquanto dobra, mova seu corpo para o lado do braço controlado — crie ângulo de escape.'},{t:'Passar a guarda',d:'Continue o movimento girando e passando para o lado do adversário — o escape converte em passagem.'},{t:'Estabelecer cruzado',d:'Complete o movimento estabelecendo o cruzado lateral ou o monte.'}],
+keys:['Dobrar o cotovelo é a prioridade #1 — imediatamente','A rotação do polegar reduz a eficácia do armbar','O escape leva à passagem — não apenas à defesa'],
+errors:['Tentar puxar o braço para fora com força','Não dobrar o cotovelo antes de girar','Parar no meio do escape sem completar a passagem']},
+
+E9:{yt:'triangle choke escape stack pass BJJ tutorial',
+steps:[{t:'Manter a postura ereta',d:'Ao ser triangulado, mantenha a postura ereta — NÃO se incline para baixo (isso aumenta a pressão).'},{t:'Empilhar (stack)',d:'Levante os quadris e empilhe o adversário — leve os joelhos dele em direção ao rosto.'},{t:'Girar para o lado',d:'Gire o seu corpo para o lado oposto ao braço que está dentro do triângulo.'},{t:'Criar o ângulo',d:'Posicione-se perpendicular ao adversário — o ângulo elimina o alinhamento do choke.'},{t:'Passar a guarda',d:'Com postura e ângulo corretos, pressione para passar a guarda. O triângulo não pode ser finalizado nesta posição.'}],
+keys:['"A solução para o triângulo é passar a guarda" — não tentar se soltar','Empilhar alivia a pressão e cria a passagem','O ângulo perpendicular elimina o alinhamento do choke'],
+errors:['Inclinar para frente (aumenta a pressão)','Tentar puxar a cabeça para fora com força','Girar para o lado errado (aumenta o choke)']},
+
+E10:{yt:'guillotine choke escape arm in BJJ tutorial',
+steps:[{t:'Identificar o tipo',d:'Guilhotina padrão (braço por fora) ou arm-in (braço incluído)? O escape é DIFERENTE para cada uma.'},{t:'Guilhotina padrão — inclinar',d:'Para guilhotina padrão: incline a cabeça para o lado da axila do adversário — isso reduz a pressão.'},{t:'Arm-in — manter o braço',d:'Para arm-in: mantenha o braço DENTRO e gire o ombro para baixo. Tentar retirar o braço piora.'},{t:'Entrada de meia guarda',d:'Independente do tipo, busque a meia guarda do lado oposto ao braço que faz o choke.'},{t:'Completar o escape',d:'Com meia guarda estabelecida, use o underhook para retirar o ângulo do choke e completar o escape.'}],
+keys:['Identificar o tipo antes de agir — padrão vs arm-in têm escapes opostos','Inclinar para a axila alivia a pressão na guilhotina padrão','A meia guarda é o destino do escape'],
+errors:['Tentar retirar o braço de uma arm-in (piora a situação)','Inclinar para longe da axila (aumenta a pressão)','Pânico — respirar e identificar o tipo primeiro']},
+
+G1:{yt:'closed guard arm wrap armbar triangle BJJ Saulo Ribeiro',
+steps:[{t:'Quebrar a postura',d:'Puxe o adversário para baixo com as pernas e uma mão no colar — o rosto deve ficar próximo ao seu peito.'},{t:'Controlar o pulso',d:'Com uma mão, controle o pulso do adversário, impedindo que ele poste a mão no chão.'},{t:'Arm wrap',d:'Com o outro braço, envolva por cima do braço controlado e agarre o seu próprio antebraço.'},{t:'Colar ao peito',d:'Puxe o braço do adversário firmemente contra o seu peito — sem espaço entre o braço dele e o seu tronco.'},{t:'Criar o ângulo',d:'Mova o quadril levemente para o lado do braço controlado. Este ângulo abre armbar, choke e sweep.'}],
+keys:['Postura QUEBRADA é pré-requisito — sem isso o arm wrap não funciona','O arm wrap deve ser firme — sem espaço entre o braço e o peito','O ângulo de quadril multiplica todas as opções de ataque'],
+errors:['Tentar o arm wrap com adversário em postura ereta','Arm wrap frouxo (adversário retira o braço facilmente)','Não criar o ângulo de quadril após o wrap']},
+
+G2:{yt:'armbar from closed guard BJJ technique breakdown',
+steps:[{t:'Quebrar postura + arm wrap',d:'Pré-requisito: postura quebrada e arm wrap estabelecido (cap. 15-0).'},{t:'Ângulo de quadril 90°',d:'Mova o quadril 90° perpendicular ao adversário, para o lado do braço alvo. SEM ângulo, SEM armbar.'},{t:'Perna sobre o ombro',d:'Jogue a perna de cima (mais próxima do pescoço do adversário) por cima do ombro dele.'},{t:'Apertar os joelhos',d:'Aperte os joelhos para controlar o braço e prevenir que o adversário o retire.'},{t:'Elevar o quadril',d:'Com o braço posicionado (cotovelo para cima), eleve os quadris de forma explosiva.'},{t:'Controlar com a perna',d:'A perna no PESCOÇO (não na cabeça) controla o movimento — quanto mais pressão, menos espaço para girar.'}],
+keys:['O ângulo de quadril de 90° é o elemento mais crítico — sem ele o armbar não tem força','Apertar os joelhos previne o escape do braço','Perna no pescoço, não na cabeça'],
+errors:['Armbar sem ângulo de quadril (sem força)','Pernas abertas ao finalizar (adversário retira o braço)','Cotovelo do adversário dobrado ao tentar finalizar']},
+
+G3:{yt:'triangle choke from closed guard BJJ breakdown mechanics',
+steps:[{t:'Quebrar postura completamente',d:'Puxe o adversário para baixo — rosto no peito. SEM postura quebrada, SEM triângulo.'},{t:'Criar o ângulo de quadril',d:'Mova o quadril para o lado do braço que vai ficar FORA do triângulo — ângulo de ~45°.'},{t:'Assimetria dos braços',d:'Um braço do adversário fica DENTRO (cruzado ao peito dele), o outro fica FORA. Esta assimetria é a chave.'},{t:'Perna sobre o pescoço',d:'Jogue a perna do lado do braço de fora sobre o pescoço do adversário.'},{t:'Travar o triângulo',d:'Passe o tornozelo por baixo do joelho oposto e cruze. O joelho de cima comprime o pescoço.'},{t:'Ajustar e finalizar',d:'Ajuste o ângulo para 90° e puxe a cabeça do adversário para baixo enquanto aperta as coxas.'}],
+keys:['Um braço dentro, um braço fora — esta assimetria é obrigatória','O ângulo de 90° do quadril é mais importante que a força das pernas','Puxar a cabeça para baixo aumenta significativamente a pressão'],
+errors:['Dois braços dentro ou fora (perde o choke)','Não criar o ângulo (perde força nas pernas)','Puxar a cabeça antes de travar (perde o posicionamento)']},
+
+G5:{yt:'overwrap to back take closed guard BJJ Saulo Ribeiro',
+steps:[{t:'Arm wrap profundo',d:'Da posição de arm wrap, aprofunde o controle: envolva o braço até o seu antebraço ficar na axila do adversário.'},{t:'Overwrap — por CIMA',d:'Com o outro braço, passe POR CIMA do braço do adversário (não por baixo como no arm wrap) e agarre atrás do pescoço.'},{t:'Puxar para o seu lado',d:'Puxe o adversário para cima e para o seu lado — ele precisa vir em cima de você.'},{t:'Roll',d:'Role em direção ao lado do overwrap, levando o adversário junto.'},{t:'Pegada das costas',d:'Ao completar o roll, você está nas costas do adversário. Estabeleça seat belt e ganchos imediatamente.'}],
+keys:['Diferença: arm wrap passa por BAIXO, overwrap passa por CIMA','Puxar o adversário para cima facilita o roll','Estabeleça o seat belt IMEDIATAMENTE ao completar o roll'],
+errors:['Confundir arm wrap com overwrap (direção diferente)','Não puxar o adversário para cima antes do roll','Completar o roll sem imediatamente buscar o seat belt']},
+
+G7:{yt:'hip bump sweep closed guard BJJ tutorial Saulo Ribeiro',
+steps:[{t:'Posição base',d:'Adversário de joelhos na sua guarda, postura levemente ereta. O hip bump funciona contra postura erguida.'},{t:'Sit-up explosivo',d:'Sente-se RAPIDAMENTE girando para um lado — use os abdominais de forma explosiva. Este é o momento de timing.'},{t:'Postar a mão',d:'Poste a mão traseira no chão atrás de você para criar base e suporte.'},{t:'Drive de quadril',d:'Empurre o quadril para frente e para cima, no nível do peito do adversário.'},{t:'Abraço simultâneo',d:'SIMULTANEAMENTE ao drive, abrace o pescoço ou ombro do adversário com o braço livre.'},{t:'Completar para o monte',d:'O drive mais o abraço desequilibra — continue o movimento rolando para o monte.'}],
+keys:['O sit-up explosivo e a velocidade são o que surpreendem — não a força','Drive de quadril e abraço acontecem SIMULTANEAMENTE','Encadeie: hip bump → adversário posta a mão → kimura'],
+errors:['Sit-up lento (adversário tem tempo para reagir)','Drive sem abraço do ombro/pescoço','Não continuar para o monte após o desequilíbrio']},
+
+G8:{yt:'flower sweep closed guard BJJ hip bump combo',
+steps:[{t:'Identificar a abertura',d:'O flower sweep funciona quando o adversário apoia o joelho no chão e abre espaço lateral.'},{t:'Controlar o braço',d:'Segure o braço do adversário do lado do sweep — pulso ou manga.'},{t:'Capturar o joelho',d:'Com a mão oposta, capture o joelho do adversário (o que está no chão).'},{t:'Puxar e empurrar',d:'Puxe o joelho para cima enquanto empurra o braço para o outro lado — rotação em torno do eixo.'},{t:'Completar para o monte',d:'O adversário gira e você completa para o monte.'}],
+keys:['O joelho apoiado no chão é o que torna o flower sweep possível','Controle simultâneo de braço + joelho','Use como combo: hip bump → defende → flower sweep'],
+errors:['Tentar quando adversário não tem joelho apoiado','Puxar o joelho sem controlar o braço','Não completar para o monte após o desequilíbrio']},
+
+G11:{yt:'guard pass defense single double under BJJ Saulo Ribeiro',
+steps:[{t:'Identificar o ataque',d:'Adversário passa por baixo (single ou double under) ou por cima das pernas. Resposta deve ser imediata.'},{t:'Single under — apertar lateral',d:'Para single under: aperte os joelhos lateralmente no ombro do adversário que está por baixo.'},{t:'Double under + sweep',d:'Para double under: eleve os quadris e role para o lado — sem controle superior, adversário não resiste.'},{t:'Leg squeeze defense',d:'Quando adversário passa por cima: aperte as pernas no ombro e role para o lado oposto.'},{t:'Reconquistar guarda',d:'Em todas as defesas, o objetivo final é recuperar a guarda — pela inversão ou pelo retorno de posição.'}],
+keys:['Resposta imediata — esperar tarde demais elimina as opções','Double under sem controle superior = adversário vulnerável ao sweep','Defesa e contra-ataque ocorrem no mesmo movimento'],
+errors:['Resposta tardia (passagem completa)','Tentar apenas se soltar sem contra-atacar','Não usar o momentum da defesa para recuperar guarda']},
+
+OG1:{yt:'butterfly guard control movement BJJ tutorial underhook',
+steps:[{t:'Posição sentada',d:'Sente-se com o adversário à sua frente, joelhos dobrados. Mantenha as costas relativamente eretas — não deite.'},{t:'Inserir os ganchos',d:'Deslize os pés por dentro das pernas do adversário — pés vão para entre as coxas dele.'},{t:'Posicionar os ganchos',d:'Vire os pés para dentro, enganchando nos FÊMURES do adversário (não nas canelas).'},{t:'Underhook',d:'Busque underhook em um ou ambos os lados — quem tem o underhook controla a posição.'},{t:'Postura dinâmica',d:'Mantenha as costas relativamente eretas. A borboleta é dinâmica — mova junto com o adversário.'}],
+keys:['Ganchos nos fêmures, não nas canelas (alavanca muito maior)','Underhook é a prioridade — quem tem o underhook dita o jogo','A borboleta é uma guarda de movimento, não estática'],
+errors:['Ganchos nas canelas (perde alavanca)','Deitar completamente (perde a postura de ataque)','Ganchos estáticos enquanto o adversário se move']},
+
+OG2:{yt:'butterfly sweep wing sweep BJJ tutorial combo',
+steps:[{t:'Borboleta com underhook',d:'Pré-requisito: borboleta estabelecida com underhook do lado do sweep.'},{t:'Desequilibrar para o lado',d:'Puxe o adversário para o seu lado com o underhook, fazendo ele distribuir o peso sobre você.'},{t:'Gancho como elevador',d:'Ao sentir o peso, use o gancho do mesmo lado como elevador — expanda a perna elevando o quadril do adversário.'},{t:'Virar para o monte',d:'Enquanto eleva, vire o seu corpo para o lado oposto, completando o sweep para o monte.'},{t:'Wing sweep (variação)',d:'Adversário inclina para defender? Wing sweep: gancho na perna mais avançada + puxada para o outro lado.'}],
+keys:['O desequilíbrio lateral ANTES do sweep cria a abertura','O gancho eleva como uma alavanca — não empurra','Butterfly Sweep + Wing Sweep formam um combo: defende um, cai no outro'],
+errors:['Tentar o sweep sem desequilibrar o adversário primeiro','Empurrar com o gancho em vez de elevar','Não ter o wing sweep como resposta à defesa']},
+
+OG6:{yt:'de la riva guard BJJ tutorial sweep back take',
+steps:[{t:'Posição de DLR',d:'Adversário em pé ou de joelhos. Coloque o gancho por fora da perna dele, por dentro da coxa.'},{t:'Controle de manga/tornozelo',d:'Com a mão do lado do gancho, controle a manga ou o tornozelo do adversário.'},{t:'Controle do calcanhar',d:'Com a outra mão, controle o calcanhar da perna enganchada — isso previne que ele retire a perna.'},{t:'Desequilíbrio para frente',d:'Puxe o calcanhar para cima enquanto empurra o joelho para baixo com o gancho — adversário cai para frente.'},{t:'Rollover sweep',d:'Ao cair, role para a posição de topo sobre o adversário.'},{t:'Transicionar para RDLR',d:'Se adversário avança: solte o DLR e reposicione para Reverse DLR antes que ele complete a passagem.'}],
+keys:['DLR é uma guarda de posicionamento — o gancho cria o ângulo de desequilíbrio','Controle de calcanhar previne que o adversário passe a perna','Transicionar para RDLR quando adversário avança é a resposta automática'],
+errors:['Gancho muito baixo nas canelas (sem alavanca)','Não controlar o calcanhar (adversário retira a perna)','Não transicionar para RDLR quando adversário avança']},
+
+OG9:{yt:'half guard deep control underhook BJJ Saulo Ribeiro',
+steps:[{t:'Capturar a perna',d:'Ao ser passado parcialmente, capture a perna do adversário entre as suas ANTES que ele complete a passagem.'},{t:'Travar com joelhos cruzados',d:'Cruce os joelhos e aperte — a perna do adversário fica presa entre as suas coxas.'},{t:'Buscar o underhook',d:'Use o braço de baixo para buscar o underhook por baixo do braço do adversário — este é o elemento crítico.'},{t:'Deep control',d:'Com o underhook, puxe seu corpo para junto da perna capturada, aprofundando a posição.'},{t:'Opções de ataque',d:'Do deep control com underhook: backdoor para costas (24-5), kimura (24-6) ou Old School sweep.'}],
+keys:['O underhook é o elemento mais importante — sem ele a meia guarda é passiva','Quem controla o underhook controla a posição','Deep control com underhook abre backdoor, kimura e sweep'],
+errors:['Meia guarda sem underhook (posição defensiva sem saída)','Ser achatado antes de buscar o underhook','Segurar apenas a perna sem controle de quadril/tronco']},
+
+OG10:{yt:'half guard backdoor back take BJJ tutorial Saulo',
+steps:[{t:'Pré-requisito: deep control',d:'Meia guarda profunda com underhook estabelecido. Sem isso, o backdoor não é possível.'},{t:'Criar espaço lateral',d:'Use o underhook para criar espaço entre você e o adversário — empurre ligeiramente para longe.'},{t:'Iniciar a rotação',d:'Comece a virar o corpo em direção à perna capturada — barriga para baixo.'},{t:'Passar por BAIXO',d:'Role por BAIXO do torso do adversário — você passa sob o corpo dele, não por cima.'},{t:'Emergir do outro lado',d:'Emerja pelo outro lado do adversário — você está agora posicionado nas costas dele.'},{t:'Seat belt imediato',d:'Estabeleça o seat belt (um braço por cima, um por baixo) e insira os ganchos imediatamente.'}],
+keys:['O roll é por BAIXO — você passa sob o adversário','Mantenha o controle da perna durante todo o roll','Seat belt IMEDIATAMENTE ao emergir — sem demora'],
+errors:['Tentar rolar por cima (muito espaço, adversário reage)','Perder o controle da perna durante o roll','Emergir sem imediatamente buscar o seat belt']},
+
+OG11:{yt:'kimura from half guard deep control BJJ tutorial',
+steps:[{t:'Identificar a abertura',d:'Do deep control, observe o braço do adversário — quando ele apoia o braço no chão para posturar, o kimura está disponível.'},{t:'Controlar o pulso',d:'Segure o pulso do adversário com a mão de cima (controle 4 horas).'},{t:'Grip 4-11',d:'Passe o braço de baixo por cima do braço do adversário e agarre seu próprio pulso (controle 11 horas).'},{t:'Cotovelos no chão',d:'Posicione os cotovelos próximos ao chão como pivot. Sem pivot, sem alavanca.'},{t:'Pressão + rotação',d:'Pressione o punho do adversário para baixo enquanto rotaciona o ombro em direção à axila.'},{t:'Back take se ele rolar',d:'Se adversário rola para escapar do kimura, as costas estão disponíveis — siga o movimento.'}],
+keys:['O kimura da meia guarda surge naturalmente — não force','Quando adversário rola para escapar, as costas estão disponíveis','Grip 4-11 é o mesmo do kimura da guarda fechada'],
+errors:['Aplicar com adversário em postura forte (pouca alavanca)','Cotovelos elevados ao pressionar (sem pivot)','Pressão apenas para baixo sem rotação do ombro']},
+
+P1:{yt:'grip fighting closed guard BJJ passing tutorial',
+steps:[{t:'Bloqueio de colar precoce',d:'Ao entrar na guarda, coloque a mão no colar do adversário ANTES que ele pegue o seu.'},{t:'Combater cross-collar grip',d:'Se adversário pegar o colar cruzado: gire o braço por dentro e quebre para cima e para fora.'},{t:'Combater over-the-shoulder grip',d:'Se adversário pegar o ombro: passe o braço por baixo e quebre para dentro.'},{t:'Mãos nos joelhos',d:'Após o grip fight, posicione as mãos nos joelhos do adversário — previne pull-down e controla o quadril.'},{t:'Controle de quadril',d:'Com grips nos joelhos, você controla o quadril do adversário e pode iniciar a abertura da guarda.'}],
+keys:['"A passagem começa no grip fight" — quem ganha os grips ganha a passagem','Quebrar grips com movimento circular, não linear (mais eficiente)','Mãos nos joelhos previnem que o adversário quebre a sua postura'],
+errors:['Deixar o adversário estabelecer grips sem reagir','Tentar quebrar grips com movimento linear (usa muita força)','Ignorar o grip fight e tentar passar com grips ativos']},
+
+P3:{yt:'underhook guard pass BJJ Saulo Ribeiro tutorial',
+steps:[{t:'Abrir a guarda',d:'Quebre o grip das pernas com pressão de quadril para baixo, criando espaço.'},{t:'Buscar o underhook',d:'Insira um braço por baixo da perna do adversário, buscando o underhook no OMBRO dele.'},{t:'Pressão de ombro',d:'Pressione seu ombro para baixo no ombro do adversário — isso o "achata" e elimina os frames.'},{t:'Direcionar o quadril',d:'Mova seu quadril para fora da linha de defesa do adversário — perpendicular ao corpo dele.'},{t:'Drive para frente',d:'Drive com o ombro e o quadril simultaneamente para frente e para o lado.'},{t:'Estabelecer cruzado',d:'Complete a passagem bloqueando o quadril e estabelecendo o cruzado lateral.'}],
+keys:['Underhook no OMBRO, não apenas na perna — controla o tronco','Aplanar o adversário elimina os frames e cria espaço para passar','Drive com o corpo inteiro, não apenas os braços'],
+errors:['Underhook apenas na perna sem chegar ao ombro','Não aplanar o adversário (ele tem espaço para defender)','Drive apenas com os braços (usa força, não mecânica)']},
+
+P7:{yt:'knee slice cross pass BJJ tutorial guard pass',
+steps:[{t:'Posição de topo',d:'Adversário com guarda aberta. Posicione-se com peso sobre os joelhos, controle das pernas.'},{t:'Controlar a perna de cima',d:'Segure a perna do adversário que está por cima — tornozelo ou joelho.'},{t:'Cortar com o joelho',d:'Deslize o joelho por dentro, passando por dentro da perna do adversário em direção ao mat.'},{t:'Pressão lateral',d:'Enquanto o joelho corta, pressione lateralmente com o ombro em direção ao chão.'},{t:'Underhook de suporte',d:'Com o braço oposto, busque o underhook no ombro para completar o controle.'},{t:'Estabelecer cruzado',d:'Complete a passagem com o underhook e controle de quadril.'}],
+keys:['O joelho corta como uma faca — movimento único e decisivo','Pressão lateral do ombro achata o adversário durante a passagem','Knee cross funciona gi e no-gi — uma das mais versáteis'],
+errors:['Knee cross lento (adversário reposiciona a perna)','Sem pressão lateral de ombro (adversário cria frame)','Não buscar underhook após o corte (perde o controle)']},
+
+P8:{yt:'toreando bullfighter pass BJJ tutorial open guard',
+steps:[{t:'Controle de pernas',d:'Segure ambas as pernas do adversário pelos joelhos ou tornozelos — controle simétrico.'},{t:'Abordagem lateral',d:'Mova-se lateralmente para um lado enquanto mantém o controle das pernas.'},{t:'Redirecionamento',d:'Ao mover para o lado, redirecione as pernas do adversário para o lado OPOSTO ao qual você vai passar.'},{t:'Criar o ângulo',d:'Enquanto as pernas vão para um lado, seu corpo vai para o outro — como um toureador.'},{t:'Estabelecer o cruzado',d:'Complete a passagem movendo-se para o lado do adversário e estabelecendo o cruzado.'},{t:'Controle de quadril imediato',d:'Bloqueie o quadril imediatamente — sem isso o adversário recupera a guarda.'}],
+keys:['Redirecionar em vez de lutar contra as pernas — toreando = toureador','A velocidade lateral é mais eficaz que a força','Controle de quadril imediatamente após a passagem'],
+errors:['Tentar passar contra as pernas (muito esforço)','Movimento lento (adversário redireciona os quadris)','Não controlar o quadril ao estabelecer o cruzado']},
+
+P12:{yt:'half guard pass flat out esgrima shin slide BJJ Saulo',
+steps:[{t:'Flat out — aplanar',d:'Do top half guard, jogue o peso para baixo e atrás, aplanando o adversário no chão.'},{t:'Controle da cabeça',d:'Com o braço, controle a cabeça do adversário para prevenir que ele recrie o underhook.'},{t:'Esgrima pass',d:'Libere a perna presa: carregue-a para fora enquanto gira o quadril. Como um movimento de esgrima.'},{t:'Shin slide pass',d:'Variação: deslize a canela para fora da meia guarda em vez de carregar — mais fluido.'},{t:'Completar para o monte',d:'Após liberação da perna, continue para o monte ou cruzado com controle de cabeça.'}],
+keys:['Aplanar (flat out) é o PRIMEIRO passo — pré-requisito de todas as passagens de HG','Controle da cabeça elimina o underhook','Esgrima e shin slide são complementares'],
+errors:['Tentar passar sem aplanar primeiro (adversário usa deep control)','Não controlar a cabeça (adversário recupera underhook)','Carregar a perna sem primeiro aplanar']},
+
+SB1:{yt:'bow arrow choke BJJ back control gi tutorial',
+steps:[{t:'Back control estabelecido',d:'Seat belt com ganchos profundos estabelecidos. O Bow & Arrow começa aqui.'},{t:'Grip de colar profundo',d:'Com a mão de cima, insira os quatro dedos no colar pelo pescoço — o mais profundo possível.'},{t:'Polegar por fora',d:'Polegar fica por fora do colar (não dentro). Este grip é mais forte e seguro.'},{t:'Capturar a perna',d:'Com a mão de baixo, capture a perna de cima do adversário pelo joelho ou canela.'},{t:'Estender o corpo',d:'Estenda seu corpo — puxe o colar para trás e a perna para frente simultaneamente.'},{t:'A flecha',d:'O corpo do adversário se curva como um arco. A pressão combinada dos dois pontos de controle fecha o choke.'}],
+keys:['Profundidade do grip de colar determina toda a eficácia','A perna capturada é a alavanca que multiplica a pressão — não é opcional','O corpo do adversário forma o arco (bow) — daí o nome'],
+errors:['Grip de colar raso (pressão insuficiente no pescoço)','Não capturar a perna (perde 50% da alavanca)','Aplicar sem estender o corpo completamente']},
+
+SB3:{yt:'americana from mount BJJ tutorial armbar combination',
+steps:[{t:'Monte com braço acessível',d:'Pré-requisito: monte estabelecido. A americana funciona quando o braço do adversário está plano no chão.'},{t:'Isolar o braço',d:'Pressione o pulso do adversário contra o chão com uma mão — braço em posição de L de 90°.'},{t:'Grip 4-11',d:'Passe o outro braço por baixo do braço do adversário e agarre seu próprio pulso.'},{t:'Cotovelos no chão',d:'Posicione os cotovelos no chão como pivot. SEM cotovelos no chão, SEM alavanca.'},{t:'Pressão + rotação',d:'Pressione o punho do adversário para baixo enquanto rotaciona o ombro em direção à axila.'},{t:'Armbar como resposta',d:'Se adversário dobra o cotovelo para defender: libere o grip e transite para o armbar.'}],
+keys:['Braço do adversário DEVE estar em ângulo de 90° para a americana funcionar','Cotovelos no chão são o pivot — sem eles não há alavanca','Americana + armbar formam um sistema: defende um, cai no outro'],
+errors:['Braço do adversário não em 90° (perde eficácia)','Cotovelos elevados ao pressionar (sem pivot)','Apenas pressão para baixo sem rotação do ombro']},
+
+SB5:{yt:'mount collar choke palm up down BJJ gi tutorial',
+steps:[{t:'Monte com adversário defensivo',d:'Do monte, adversário com braços junto ao corpo. Acesse o colar.'},{t:'Palm up grip — primeiro',d:'Insira os dedos no colar com a palma para cima — quatro dedos dentro, polegar por fora.'},{t:'Segundo grip',d:'Para palm up/palm down: segundo grip com a outra mão, palma para baixo, mais profundo que o primeiro.'},{t:'Cotovelos juntos',d:'Aproxime os cotovelos enquanto se inclina levemente para frente — isso cria a pressão no pescoço.'},{t:'S-mount para mais alavanca',d:'Para S-mount cross choke: transite para S-mount primeiro — muito mais alavanca para o choke.'}],
+keys:['O grip profundo determina a eficácia — quanto mais fundo, mais pressão','Inclinar para FRENTE (não para cima) cria o ângulo de pressão correto','Sistema: palm up/down → palm up/up → cross choke → S-mount armbar'],
+errors:['Grip raso no colar','Inclinar para cima em vez de para frente','Não encadear com o armbar quando adversário defende']},
+
+SB7:{yt:'kimura walk around armbar side control BJJ system',
+steps:[{t:'Cruzado lateral estabelecido',d:'Pré-requisito: cruzado com controle de cabeça e quadril.'},{t:'Kimura: isolar o braço',d:'Quando adversário apoia o braço no chão, coloque o pulso na posição 4-11.'},{t:'Rotação do ombro',d:'Rotacione o ombro do adversário em direção à axila — kimura finaliza na direção oposta da americana.'},{t:'Walk-around armbar',d:'Se kimura for defendido: mantenha o grip e caminhe em volta da cabeça do adversário para o armbar.'},{t:'Spinning armbar',d:'Variação dinâmica: gire por sobre o corpo do adversário para o armbar — requer timing.'},{t:'De volta ao kimura',d:'Se spinning falhar: converta de volta ao kimura — adversário tentou dobrar o cotovelo ao defender.'}],
+keys:['Kimura é o gateway — quando bloqueado, abre o armbar e vice-versa','Walk-around armbar é mais seguro que o spinning para iniciantes','O sistema de cruzado: kimura → walk-around → spinning → kimura'],
+errors:['Kimura sem cotovelo como pivot (sem alavanca)','Abandonar o grip ao transitar entre técnicas','Tentar spinning armbar sem setup adequado']},
+
+SB10:{yt:'clock choke BJJ turtle position all fours tutorial',
+steps:[{t:'Adversário em tartaruga',d:'Posicione-se ao lado do adversário em All-Fours, com o corpo paralelo ao dele.'},{t:'Grip de colar',d:'Com a mão mais próxima, insira-a no colar pelo pescoço do adversário — quatro dedos dentro.'},{t:'Controle de braço',d:'Com a outra mão, controle o braço do adversário que está mais próximo de você.'},{t:'Movimento circular',d:'Caminhe em círculo (como um ponteiro de relógio) mantendo os grips — arraste o adversário.'},{t:'Pressão de quadril',d:'Use o quadril como âncora ao caminhar. A pressão do quadril combinada com o grip fecha o choke.'}],
+keys:['O movimento circular (como um relógio) cria a pressão — não apenas o grip','Quadril como âncora multiplica a eficácia','A tartaruga como posição passiva é vulnerável ao clock choke'],
+errors:['Apenas o grip sem o movimento circular (pressão insuficiente)','Não usar o quadril como peso','Posicionamento incorreto ao lado do adversário']},
+
+SB11:{yt:'brabo choke half guard top BJJ tutorial Saulo Ribeiro',
+steps:[{t:'Top half guard com flat out',d:'Pré-requisito: adversário aplainado na meia guarda de cima, você com underhook no ombro.'},{t:'Brabo grip — por baixo',d:'Com a mão livre, passe por baixo do pescoço do adversário e agarre a manga ou o ombro oposto.'},{t:'Criar a pressão',d:'Pressione o seu antebraço contra o pescoço do adversário enquanto puxa o ombro oposto para você.'},{t:'Perna como alavanca',d:'A perna capturada na meia guarda atua como alavanca adicional — mantenha-a travada.'},{t:'Straight armlock como backup',d:'Se adversário defende o Brabo: aplique o straight armlock no braço que ele usou para defender.'}],
+keys:['Brabo funciona melhor quando adversário tem underhook (tentando defender)','Antebraço no pescoço + puxada do ombro = estrangulamento diagonal','Sistema: Brabo → defende → straight armlock'],
+errors:['Tentar sem aplanar o adversário primeiro','Grip superficial que não alcança o pescoço','Não ter o straight armlock como backup']},
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════════════════════
 const nodeMap = {};
 NODES.forEach(n => nodeMap[n.id] = n);
@@ -704,7 +921,7 @@ function renderTechniqueList() {
 // ═══════════════════════════════════════════════════════════════════════════
 // NODE BOTTOM SHEET
 // ═══════════════════════════════════════════════════════════════════════════
-function openNodeSheet(id) {
+function openNodeSheet(id, tab) {
   currentNodeId = id;
   const n = nodeMap[id];
   if(!n) return;
@@ -714,11 +931,41 @@ function openNodeSheet(id) {
   const note = getNote(id);
   const total = n.checkpoints ? n.checkpoints.length : 0;
   const beltColor = BELT_COLORS[n.belt];
-  const focusState = isFocus(id);
+  const activeTab = tab || 'steps';
+  const stepData = STEPS[id];
 
   const progressSteps = total > 0 ? n.checkpoints.map((_,i) =>
     `<div class="prog-step ${i < checks ? 'filled' : ''}"></div>`).join('') : '';
 
+  // ── Steps tab ──
+  const stepsHtml = stepData ? `
+    <div class="stepper">
+      ${stepData.steps.map((s,i) => `
+        <div class="st-item">
+          <div class="st-left">
+            <div class="st-circle">${i+1}</div>
+            ${i < stepData.steps.length-1 ? '<div class="st-line"></div>' : ''}
+          </div>
+          <div class="st-right">
+            <div class="st-title">${s.t}</div>
+            <div class="st-desc">${s.d}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="key-box">
+      <div class="key-box-label">✓ Pontos-Chave</div>
+      ${stepData.keys.map(k=>`<div class="key-box-item">${k}</div>`).join('')}
+    </div>
+    <div class="err-box">
+      <div class="err-box-label">✕ Erros Comuns</div>
+      ${stepData.errors.map(e=>`<div class="err-box-item">${e}</div>`).join('')}
+    </div>
+    <a class="yt-btn" href="https://www.youtube.com/results?search_query=${encodeURIComponent(stepData.yt)}" target="_blank">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#ff7070"><path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/></svg>
+      Ver vídeos de referência no YouTube
+    </a>` : `<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">${n.desc}</div>`;
+
+  // ── Treino tab ──
   const checkpointsHtml = (n.checkpoints||[]).map((cp, i) => {
     const checked = i < checks;
     const locked = i > checks;
@@ -728,13 +975,8 @@ function openNodeSheet(id) {
     </div>`;
   }).join('');
 
-  document.getElementById('sheetBody').innerHTML = `
-    <div class="prog-steps">${progressSteps}</div>
-    <div class="sheet-belt-tag" style="color:${beltColor}">${BELT_LABELS[n.belt]}</div>
-    <div class="sheet-title">${n.icon} ${n.title}</div>
-    <div class="sheet-chapter">${n.chapter}</div>
-    <div class="sheet-desc">${n.desc}</div>
-    ${checkpointsHtml ? `<div class="sheet-section-label">Checkpoints de Aprendizado</div>${checkpointsHtml}` : ''}
+  const treinoHtml = `
+    ${checkpointsHtml ? `<div class="sheet-section-label">Validação no Treino</div>${checkpointsHtml}` : ''}
     <div class="drill-row">
       <div>
         <div class="drill-label">Sessões de Drill</div>
@@ -752,6 +994,20 @@ function openNodeSheet(id) {
     <button class="sheet-action ${done?'done-btn':'can'}" id="sheetMainBtn" onclick="toggleNodeDone('${id}')">
       ${done ? '✓ DOMINADO — Toque para resetar' : 'MARCAR COMO DOMINADO'}
     </button>`;
+
+  document.getElementById('sheetBody').innerHTML = `
+    <div class="prog-steps">${progressSteps}</div>
+    <div class="sheet-belt-tag" style="color:${beltColor}">${BELT_LABELS[n.belt]}</div>
+    <div class="sheet-title">${n.icon} ${n.title}</div>
+    <div class="sheet-chapter">${n.chapter}</div>
+    ${!stepData ? `<div class="sheet-desc">${n.desc}</div>` : ''}
+    <div class="sheet-tabs">
+      <div class="sheet-tab ${activeTab==='steps'?'active':''}" onclick="openNodeSheet('${id}','steps')">📋 Como Executar</div>
+      <div class="sheet-tab ${activeTab==='treino'?'active':''}" onclick="openNodeSheet('${id}','treino')">🎯 Treino</div>
+    </div>
+    <div id="sheetTabContent">
+      ${activeTab === 'steps' ? stepsHtml : treinoHtml}
+    </div>`;
 
   document.getElementById('sheetOverlay').classList.add('open');
 }
